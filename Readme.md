@@ -16,5 +16,4 @@ npm i --global yarn
 yarn install
 
 yarn start
-
 ```
