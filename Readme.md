@@ -35,3 +35,10 @@ yarn install
 
 yarn start
 ```
+
+To run it into **Docker Containers**:
+```
+docker-compose build
+
+docker-compose up
+```

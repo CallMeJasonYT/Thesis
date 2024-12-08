@@ -1,16 +1,16 @@
 services:
   teacher_panel:
     build:
-      context: ./teacher_panel
+      context: ./teacher-panel
       dockerfile: Dockerfile
     volumes:
-      - ./teacher_panel:/app
+      - ./teacher-panel:/app
       - /app/node_modules
     ports:
       - "3000:3000"
     environment:
       - WATCHPACK_POLLING=true
-    command: npm start
+    command: yarn start
 
   websocket-server:
     build:
@@ -23,7 +23,7 @@ services:
       - "8080:8080"
     environment:
     - WATCHPACK_POLLING=true
-    command: node server.js
+    command: yarn start
 
   postgre-api:
     build:
@@ -39,7 +39,7 @@ services:
         ipv4_address: 173.18.0.6
     environment:
       - WATCHPACK_POLLING=true
-    command: node server.js
+    command: yarn start
   
   postgre-db:
     image: postgres:12-alpine
