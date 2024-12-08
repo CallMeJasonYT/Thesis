@@ -1,4 +1,4 @@
-To download the project run:
+To download the **Project**:
 
 ```
 git clone https://github.com/CallMeJasonYT/Thesis
@@ -6,7 +6,7 @@ git clone https://github.com/CallMeJasonYT/Thesis
 cd Thesis 
 ```
 
-To install and run the Teacher Panel App:
+To install and run the **Teacher Panel App**:
 
 ```
 cd teacher-panel
@@ -18,7 +18,7 @@ yarn install
 yarn start
 ```
 
-To install and run the Websocket Server:
+To install and run the **Websocket Server**:
 ```
 cd websocket-server
 
@@ -27,7 +27,7 @@ yarn install
 yarn start
 ```
 
-To install and run the Postgre API:
+To install and run the **Postgre API**:
 ```
 cd postgre-api
 
