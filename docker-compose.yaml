@@ -6,11 +6,12 @@ services:
     volumes:
       - ./teacher-panel:/app
       - /app/node_modules
+      - /app/.next
     ports:
       - "3000:3000"
     environment:
       - WATCHPACK_POLLING=true
-    command: yarn start
+    command: yarn run dev
 
   websocket-server:
     build:
@@ -22,7 +23,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-    - WATCHPACK_POLLING=true
+      - WATCHPACK_POLLING=true
     command: yarn start
 
   postgre-api:
@@ -33,14 +34,14 @@ services:
       - ./postgre-api:/app
       - /app/node_modules
     ports:
-        - "3030:3030"
+      - "3030:3030"
     networks:
       network:
         ipv4_address: 173.18.0.6
     environment:
       - WATCHPACK_POLLING=true
     command: yarn start
-  
+
   postgre-db:
     image: postgres:12-alpine
     environment:
@@ -65,8 +66,8 @@ services:
     ports:
       - "5050:5050"
     networks:
-          network:
-            ipv4_address: 173.18.0.5
+      network:
+        ipv4_address: 173.18.0.5
 
 volumes:
   db-data:
