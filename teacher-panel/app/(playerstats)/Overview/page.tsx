@@ -1,8 +1,31 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 const PlayerStatsOverview = () => {
+  const [stats, setStats] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:3030/api/web/player-stats"
+        );
+        const data = await response.json();
+        console.log(data);
+        setStats(data);
+      } catch (error) {
+        console.error("Error fetching player stats:", error);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  if (!stats) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="space-y-4">
       <h1 className="text-3xl font-bold text-center text-gray-800">Overview</h1>
@@ -14,10 +37,10 @@ const PlayerStatsOverview = () => {
         </h2>
         <div className="mt-4 space-y-2">
           <p className="text-gray-700 text-lg">
-            <strong>Total Players:</strong> 500
+            <strong>Total Players:</strong> {stats.totalPlayers}
           </p>
           <p className="text-gray-700 text-lg">
-            <strong>Online Players:</strong> 120
+            <strong>Online Players:</strong> {"12"}
           </p>
         </div>
       </div>
@@ -28,13 +51,16 @@ const PlayerStatsOverview = () => {
           <h2 className="text-lg font-semibold text-blue-600">Tutorial Room</h2>
           <div className="mt-4">
             <p className="text-gray-700">
-              <strong>Total Players Played:</strong> 250
+              <strong>Total Players Played:</strong>{" "}
+              {stats.tutorialRoomStats.total_players}
             </p>
             <p className="text-gray-700">
-              <strong>Completion Rate:</strong> 75%
+              <strong>Completion Rate:</strong>{" "}
+              {stats.tutorialRoomStats.completion_rate * 100}%
             </p>
             <p className="text-gray-700">
-              <strong>Average Completion Time:</strong> 15 minutes
+              <strong>Average Completion Time:</strong>{" "}
+              {stats.tutorialRoomStats.avg_time} minutes
             </p>
           </div>
         </div>
@@ -45,13 +71,16 @@ const PlayerStatsOverview = () => {
           </h2>
           <div className="mt-4">
             <p className="text-gray-700">
-              <strong>Total Players Played:</strong> 200
+              <strong>Total Players Played:</strong>{" "}
+              {stats.trainingRoomStats.total_players}
             </p>
             <p className="text-gray-700">
-              <strong>Completion Rate:</strong> 60%
+              <strong>Completion Rate:</strong>{" "}
+              {stats.trainingRoomStats.completion_rate * 100}%
             </p>
             <p className="text-gray-700">
-              <strong>Average Completion Time:</strong> 20 minutes
+              <strong>Average Completion Time:</strong>{" "}
+              {stats.trainingRoomStats.avg_time} minutes
             </p>
           </div>
         </div>
@@ -64,13 +93,16 @@ const PlayerStatsOverview = () => {
         </h2>
         <div className="mt-4">
           <p className="text-gray-700">
-            <strong>Total Players Played:</strong> 150
+            <strong>Total Players Played:</strong>{" "}
+            {stats.escapeRoomStats.total_players}
           </p>
           <p className="text-gray-700">
-            <strong>Completion Rate:</strong> 50%
+            <strong>Completion Rate:</strong>{" "}
+            {stats.escapeRoomStats.completion_rate * 100}%
           </p>
           <p className="text-gray-700">
-            <strong>Average Completion Time:</strong> 45 minutes
+            <strong>Average Completion Time:</strong>{" "}
+            {stats.escapeRoomStats.avg_time} minutes
           </p>
         </div>
       </div>

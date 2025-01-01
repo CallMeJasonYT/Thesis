@@ -3,6 +3,15 @@
 BEGIN;
 
 
+CREATE TABLE IF NOT EXISTS public.level_completion
+(
+    id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    username character varying(30) COLLATE pg_catalog."default" NOT NULL,
+    completed boolean NOT NULL DEFAULT false,
+    "time" integer,
+    level_type level_type
+);
+
 CREATE TABLE IF NOT EXISTS public.tutorial_completion
 (
     id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
@@ -23,6 +32,14 @@ CREATE TABLE IF NOT EXISTS public."user"
     CONSTRAINT user_pkey PRIMARY KEY (id),
     CONSTRAINT usern UNIQUE (username)
 );
+
+ALTER TABLE IF EXISTS public.level_completion
+    ADD CONSTRAINT level_comp_user FOREIGN KEY (username)
+    REFERENCES public."user" (username) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
 
 ALTER TABLE IF EXISTS public.tutorial_completion
     ADD CONSTRAINT tutorial_user FOREIGN KEY (username)
