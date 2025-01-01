@@ -1,4 +1,3 @@
-// app/player-stats/layout.tsx
 import React from "react";
 import Navbar from "../../components/navbar";
 import Footer from "../../components/footer";
@@ -14,14 +13,12 @@ export default function PlayerStatsLayout({
   children: React.ReactNode;
 }) {
   return (
-    <body className="min-h-screen bg-gray-50">
-      <main className="mx-auto">
-        <div className="flex flex-col min-h-screen bg-gray-100">
-          <Navbar />
-          <main className="flex-grow mx-auto p-4">{children}</main>
-          <Footer />
-        </div>
+    <div className="bg-gray-50 min-h-screen flex flex-col">
+      <Navbar />
+      <main className="flex-grow mx-auto p-4 bg-gray-100 w-full max-w-7xl">
+        {children}
       </main>
-    </body>
+      <Footer />
+    </div>
   );
 }

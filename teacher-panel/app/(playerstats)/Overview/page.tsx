@@ -8,7 +8,7 @@ const PlayerStatsOverview = () => {
       <h1 className="text-3xl font-bold text-center text-gray-800">Overview</h1>
 
       {/* Total Players */}
-      <div className="bg-white shadow-lg rounded-lg p-6">
+      <div className="bg-white shadow-lg rounded-lg p-5">
         <h2 className="text-lg font-semibold text-indigo-600 flex items-center">
           Total Players in the Game
         </h2>
@@ -24,7 +24,7 @@ const PlayerStatsOverview = () => {
 
       {/* Tutorial and Training Rooms */}
       <div className="grid gap-6 md:grid-cols-2">
-        <div className="bg-white shadow-md rounded-lg p-6">
+        <div className="bg-white shadow-md rounded-lg p-5">
           <h2 className="text-lg font-semibold text-blue-600">Tutorial Room</h2>
           <div className="mt-4">
             <p className="text-gray-700">
@@ -39,7 +39,7 @@ const PlayerStatsOverview = () => {
           </div>
         </div>
 
-        <div className="bg-white shadow-md rounded-lg p-6">
+        <div className="bg-white shadow-md rounded-lg p-5">
           <h2 className="text-lg font-semibold text-green-600">
             Training Room
           </h2>
@@ -58,7 +58,7 @@ const PlayerStatsOverview = () => {
       </div>
 
       {/* Escape Room */}
-      <div className="bg-white shadow-md rounded-lg p-6">
+      <div className="bg-white shadow-md rounded-lg p-5">
         <h2 className="text-lg font-semibold text-purple-600">
           Escape Room Overview
         </h2>
