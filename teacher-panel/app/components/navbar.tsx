@@ -1,70 +1,60 @@
-"use client";
-
-import React, { useState } from "react";
+import { type ReactElement } from "react";
 import Link from "next/link";
-import { BurgerIcon, CloseIcon } from "../icons";
+import Image from "next/image";
 
-const Navbar = () => {
-  const [navbar, setNavbar] = useState(false);
-
+const Navbar = async (): Promise<ReactElement> => {
   return (
-    <nav className="w-full bg-blue-500 top-0 left-0 right-0 z-10">
-      <div className="justify-between px-4 mx-auto lg:max-w-7xl md:items-center md:flex md:px-8">
-        <div>
-          <div className="flex items-center justify-between py-3 md:py-5 md:block">
-            {/* LOGO */}
-            <Link href="/">
-              <h2 className="text-2xl text-white font-bold ">LOGO</h2>
+    <nav className="-mx-7 px-7 py-5 flex justify-between gap-3.5 items-center border-b border-muted">
+      {/* Left */}
+      <div className="flex gap-4 sm:gap-6 xl:gap-10 items-center transition-all transform-gpu">
+        {/* Branding */}
+        <Link
+          className="flex gap-4 items-center hover:opacity-75 transition-all transform-gpu"
+          href="/"
+          draggable={false}
+        >
+          <Image
+            src={`/images/admin.png`}
+            alt={`Thesis Logo`}
+            width={40}
+            height={40}
+            draggable={false}
+          />
+          <h1 className="hidden lg:flex text-xl font-bold">Thesis Dashboard</h1>
+        </Link>
+
+        {/* Categories */}
+        <div className="flex gap-2 sm:gap-3 items-center font-bold transition-all transform-gpu">
+          <div>
+            <Link
+              className="px-2.5 py-1 flex gap-2 items-center bg-neutral-800 text-sm rounded-lg hover:opacity-75 transition-all transform-gpu"
+              href={`/records/`}
+              draggable={false}
+            >
+              <span>Overview</span>
             </Link>
-            <div className="md:hidden">
-              <button
-                className="p-2 text-gray-700 rounded-md outline-none focus:border-gray-400 focus:border"
-                onClick={() => setNavbar(!navbar)}
-              >
-                {navbar ? (
-                  <CloseIcon className="w-6 h-6 text-white" />
-                ) : (
-                  <BurgerIcon className="w-6 h-6 text-white" />
-                )}
-              </button>
-            </div>
           </div>
-        </div>
-        <div>
-          <div
-            className={`flex-1 justify-self-center pb-3 mt-8 md:block md:pb-0 md:mt-0 ${
-              navbar
-                ? "p-12 md:p-0 block transition-all duration-500 ease-in-out"
-                : "hidden"
-            }`}
-          >
-            <ul className="h-screen md:h-auto items-center justify-center md:flex flex-col md:flex-row space-y-6 md:space-y-0 md:space-x-6">
-              <li className="text-xl text-white py-2 md:px-6 text-center border-b-2 md:border-b-0 hover:bg-orange-500 border-orange-700 md:hover:text-white md:hover:bg-transparent">
-                <Link href="#about" onClick={() => setNavbar(!navbar)}>
-                  About
-                </Link>
-              </li>
-              <li className="text-xl text-white py-2 px-6 text-center border-b-2 md:border-b-0 hover:bg-orange-500 border-orange-700 md:hover:text-white md:hover:bg-transparent">
-                <Link href="#blog" onClick={() => setNavbar(!navbar)}>
-                  Blogs
-                </Link>
-              </li>
-              <li className="text-xl text-white py-2 px-6 text-center border-b-2 md:border-b-0 hover:bg-orange-500 border-orange-700 md:hover:text-white md:hover:bg-transparent">
-                <Link href="#contact" onClick={() => setNavbar(!navbar)}>
-                  Contact
-                </Link>
-              </li>
-              <li className="text-xl text-white py-2 px-6 text-center border-b-2 md:border-b-0 hover:bg-orange-500 border-orange-700 md:hover:text-white md:hover:bg-transparent">
-                <Link href="#projects" onClick={() => setNavbar(!navbar)}>
-                  Projects
-                </Link>
-              </li>
-            </ul>
+          <div>
+            <Link
+              className="px-2.5 py-1 flex gap-2 items-center  bg-neutral-800 text-sm rounded-lg hover:opacity-75 transition-all transform-gpu"
+              href={`/records/`}
+              draggable={false}
+            >
+              <span>Activities</span>
+            </Link>
+          </div>
+          <div>
+            <Link
+              className="px-2.5 py-1 flex gap-2 items-center bg-neutral-800 text-sm rounded-lg hover:opacity-75 transition-all transform-gpu"
+              href={`/records/`}
+              draggable={false}
+            >
+              <span>Players</span>
+            </Link>
           </div>
         </div>
       </div>
     </nav>
   );
 };
-
 export default Navbar;
