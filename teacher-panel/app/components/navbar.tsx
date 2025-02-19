@@ -2,6 +2,8 @@ import { type ReactElement } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
+const categories = ["Overview", "Activities", "Players"];
+
 const Navbar = async (): Promise<ReactElement> => {
   return (
     <nav className="-mx-7 px-7 py-5 flex justify-between gap-3.5 items-center border-b border-muted">
@@ -22,36 +24,18 @@ const Navbar = async (): Promise<ReactElement> => {
           />
           <h1 className="hidden lg:flex text-xl font-bold">Thesis Dashboard</h1>
         </Link>
-
         {/* Categories */}
-        <div className="flex gap-2 sm:gap-3 items-center font-bold transition-all transform-gpu">
-          <div>
+        <div className="flex gap-4 xl:gap-5 sm:gap-3 items-center font-bold transition-all transform-gpu">
+          {categories.map((category) => (
             <Link
-              className="px-2.5 py-1 flex gap-2 items-center bg-neutral-800 text-sm rounded-lg hover:opacity-75 transition-all transform-gpu"
-              href={`/records/`}
+              key={category}
+              className="px-4 py-1.5 flex gap-5 items-center bg-neutral text-sm rounded-lg hover:opacity-75 hover:bg-secondary transition-all transform-gpu"
+              href={`/${category}/`}
               draggable={false}
             >
-              <span>Overview</span>
+              <span>{category}</span>
             </Link>
-          </div>
-          <div>
-            <Link
-              className="px-2.5 py-1 flex gap-2 items-center  bg-neutral-800 text-sm rounded-lg hover:opacity-75 transition-all transform-gpu"
-              href={`/records/`}
-              draggable={false}
-            >
-              <span>Activities</span>
-            </Link>
-          </div>
-          <div>
-            <Link
-              className="px-2.5 py-1 flex gap-2 items-center bg-neutral-800 text-sm rounded-lg hover:opacity-75 transition-all transform-gpu"
-              href={`/records/`}
-              draggable={false}
-            >
-              <span>Players</span>
-            </Link>
-          </div>
+          ))}
         </div>
       </div>
     </nav>

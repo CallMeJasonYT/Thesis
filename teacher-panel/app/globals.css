@@ -54,3 +54,23 @@ main {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.5);
 }
+
+@keyframes borderAnimation {
+  0% {
+    border-color: var(--color-primary);
+  }
+  50% {
+    border-color: var(--color-secondary);
+  }
+  100% {
+    border-color: var(--color-primary);
+  }
+}
+
+.card {
+  @apply bg-neutral shadow-lg rounded-lg p-5 border-2 border-transparent transition-all duration-500;
+}
+
+.card:hover {
+  animation: borderAnimation 1.5s infinite linear;
+}

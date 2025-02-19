@@ -1,78 +1,61 @@
-"use client";
-
 import React from "react";
+import StatsCard from "../../components/StatsCard";
 
 const PlayerStatsOverview = () => {
   return (
     <div className="space-y-4">
-      <h1 className="text-3xl font-bold text-center text-gray-800">Overview</h1>
+      <h1 className="text-2xl font-bold text-left">Overview</h1>
 
-      {/* Total Players */}
-      <div className="bg-white shadow-lg rounded-lg p-5">
-        <h2 className="text-lg font-semibold text-indigo-600 flex items-center">
-          Total Players in the Game
-        </h2>
-        <div className="mt-4 space-y-2">
-          <p className="text-gray-700 text-lg">
-            <strong>Total Players:</strong> 500
-          </p>
-          <p className="text-gray-700 text-lg">
-            <strong>Online Players:</strong> 120
-          </p>
-        </div>
-      </div>
-
-      {/* Tutorial and Training Rooms */}
       <div className="grid gap-6 md:grid-cols-2">
-        <div className="bg-white shadow-md rounded-lg p-5">
-          <h2 className="text-lg font-semibold text-blue-600">Tutorial Room</h2>
-          <div className="mt-4">
-            <p className="text-gray-700">
-              <strong>Total Players Played:</strong> 250
-            </p>
-            <p className="text-gray-700">
-              <strong>Completion Rate:</strong> 75%
-            </p>
-            <p className="text-gray-700">
-              <strong>Average Completion Time:</strong> 15 minutes
-            </p>
-          </div>
-        </div>
+        <StatsCard
+          title="Player Status"
+          stats={[
+            { label: "Total Players", value: 500 },
+            { label: "Online Players", value: 120 },
+          ]}
+          colorClass="text-primary"
+        />
 
-        <div className="bg-white shadow-md rounded-lg p-5">
-          <h2 className="text-lg font-semibold text-green-600">
-            Training Room
-          </h2>
-          <div className="mt-4">
-            <p className="text-gray-700">
-              <strong>Total Players Played:</strong> 200
-            </p>
-            <p className="text-gray-700">
-              <strong>Completion Rate:</strong> 60%
-            </p>
-            <p className="text-gray-700">
-              <strong>Average Completion Time:</strong> 20 minutes
-            </p>
-          </div>
-        </div>
+        <StatsCard
+          title="Room Status"
+          stats={[
+            { label: "Total Rooms", value: 23 },
+            { label: "Active Rooms", value: 3 },
+          ]}
+          colorClass="text-primary"
+        />
       </div>
 
-      {/* Escape Room */}
-      <div className="bg-white shadow-md rounded-lg p-5">
-        <h2 className="text-lg font-semibold text-purple-600">
-          Escape Room Overview
-        </h2>
-        <div className="mt-4">
-          <p className="text-gray-700">
-            <strong>Total Players Played:</strong> 150
-          </p>
-          <p className="text-gray-700">
-            <strong>Completion Rate:</strong> 50%
-          </p>
-          <p className="text-gray-700">
-            <strong>Average Completion Time:</strong> 45 minutes
-          </p>
-        </div>
+      <div className="grid gap-6 md:grid-cols-3">
+        <StatsCard
+          title="Tutorial Room"
+          stats={[
+            { label: "Total Players Played", value: 300 },
+            { label: "Completion Rate", value: "80%" },
+            { label: "Average Completion Time", value: "10 minutes" },
+          ]}
+          colorClass="text-secondary"
+        />
+
+        <StatsCard
+          title="Training Room"
+          stats={[
+            { label: "Total Players Played", value: 200 },
+            { label: "Completion Rate", value: "60%" },
+            { label: "Average Completion Time", value: "20 minutes" },
+          ]}
+          colorClass="text-tertiary"
+        />
+
+        <StatsCard
+          title="Escape Room"
+          stats={[
+            { label: "Total Players Played", value: 150 },
+            { label: "Completion Rate", value: "50%" },
+            { label: "Average Completion Time", value: "45 minutes" },
+          ]}
+          colorClass="text-quaternary"
+        />
       </div>
     </div>
   );
