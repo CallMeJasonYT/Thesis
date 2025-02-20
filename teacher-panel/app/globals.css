@@ -67,10 +67,6 @@ main {
   }
 }
 
-.card {
-  @apply bg-neutral shadow-lg rounded-lg p-5 border-2 border-transparent transition-all duration-500;
-}
-
 .card:hover {
   animation: borderAnimation 1.5s infinite linear;
 }
