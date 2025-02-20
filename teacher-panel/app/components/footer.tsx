@@ -1,10 +1,22 @@
 // components/Footer.tsx
 import React from "react";
+import Link from "next/link";
 
 const Footer = () => {
   return (
-    <footer className="bg-gray-800 text-white text-center p-4">
-      <p>© {new Date().getFullYear()} Made by: Jason Pavlopoulos</p>
+    <footer className="mt-auto pt-5 flex flex-col justify-center gap-2 items-center text-sm opacity-75">
+      {/* Credits */}
+      <div>
+        Made with <span className="animate-pulse">❤️</span> by{" "}
+        <Link
+          className="ml-1 text-red-400 hover:opacity-75 transition-all font-bold transform-gpu"
+          href="https://github.com/CallMeJasonYT"
+          target="_blank"
+          draggable={false}
+        >
+          Jason Pavlopoulos
+        </Link>
+      </div>
     </footer>
   );
 };
