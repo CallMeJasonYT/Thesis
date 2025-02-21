@@ -1,5 +1,10 @@
 export { default as ExitIcon } from "./exitIcon";
-export { default as BurgerIcon } from "./burgerIcon";
 export { default as BookIcon } from "./bookIcon";
-export { default as UserIcon } from "./userIcon";
+export { default as UsersIcon } from "./usersIcon";
 export { default as CloseIcon } from "./closeIcon";
+export { default as OnlineIcon } from "./onlineIcon";
+export { default as RoomsTotal } from "./roomsTotal";
+export { default as RoomsOpen } from "./roomsOpen";
+export { default as PlayersEntered } from "./playersEntered";
+export { default as CompletedIcon } from "./completedIcon";
+export { default as StopwatchIcon } from "./stopwatchIcon";

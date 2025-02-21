@@ -27,14 +27,8 @@ const RecordsTable: React.FC<{ top?: number }> = ({ top }) => {
         );
         const fetchedData = await response.json();
 
-        console.log("Fetched Data:", fetchedData); // Debugging
-        console.log("Leaderboard Data:", fetchedData.leaderboardData); // Debugging
-
-        if (fetchedData && fetchedData.leaderboardData) {
-          setData(fetchedData.leaderboardData);
-        } else {
-          console.error("Unexpected API response format:", fetchedData);
-        }
+        console.log("Data:", fetchedData);
+        setData(fetchedData.leaderboardData);
       } catch (error) {
         console.error("Error fetching records:", error);
       }
