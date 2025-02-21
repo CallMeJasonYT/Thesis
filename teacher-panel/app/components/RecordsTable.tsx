@@ -1,4 +1,5 @@
-import React from "react";
+"use client";
+import React, { useEffect, useState } from "react";
 import {
   Table,
   TableHeader,
@@ -6,56 +7,81 @@ import {
   TableRow,
   TableHead,
   TableCell,
-} from "./Table"; // Adjust the import path as needed
+} from "./Table";
 
 interface UserRecord {
   username: string;
-  overallScore: number;
-  fastestCompletionTime: number;
-  datetime: string;
+  highest_score: number;
+  time_elapsed: number;
+  timestamp: string;
 }
 
-interface RecordsTableProps {
-  data: UserRecord[];
-  top?: number; // If provided, limits the number of users displayed
-}
+const RecordsTable: React.FC<{ top?: number }> = ({ top }) => {
+  const [data, setData] = useState<UserRecord[]>([]);
 
-const RecordsTable: React.FC<RecordsTableProps> = ({ data, top }) => {
-  // Sort by Overall Score in descending order
-  const sortedData = [...data].sort((a, b) => b.overallScore - a.overallScore);
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:3030/api/web/player-table"
+        );
+        const fetchedData = await response.json();
+
+        console.log("Fetched Data:", fetchedData); // Debugging
+        console.log("Leaderboard Data:", fetchedData.leaderboardData); // Debugging
+
+        if (fetchedData && fetchedData.leaderboardData) {
+          setData(fetchedData.leaderboardData);
+        } else {
+          console.error("Unexpected API response format:", fetchedData);
+        }
+      } catch (error) {
+        console.error("Error fetching records:", error);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   // Slice to get the top X users if `top` is provided
-  const displayedData = top ? sortedData.slice(0, top) : sortedData;
+  const displayedData = top ? data.slice(0, top) : data;
 
   return (
-    <div className="border border-light shadow-lg rounded-xl">
-      <Table className="w-full overflow-x-auto">
-        <TableHeader>
-          <TableRow className="bg-neutral border-muted text-gray-500">
-            <TableHead className="text-center">Username</TableHead>
-            <TableHead className="text-center">Overall Score</TableHead>
-            <TableHead className="text-center">
-              Fastest Completion Time
-            </TableHead>
-            <TableHead className="text-center">Datetime</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {displayedData.map((user, index) => (
-            <TableRow
-              key={index}
-              className="bg-neutral border-muted hover:bg-light"
-            >
-              <TableCell className="text-center">{user.username}</TableCell>
-              <TableCell className="text-center">{user.overallScore}</TableCell>
-              <TableCell className="text-center">
-                {user.fastestCompletionTime + " seconds"}
-              </TableCell>
-              <TableCell className="text-center">{user.datetime}</TableCell>
+    <div className="space-y-4">
+      <p className="text-2xl font-bold text-left">
+        Escape Room Top 5 Leaderboard
+      </p>
+      <div className="border border-light shadow-lg rounded-xl">
+        <Table className="w-full overflow-x-auto">
+          <TableHeader>
+            <TableRow className="bg-neutral border-muted text-gray-500">
+              <TableHead className="text-center">Username</TableHead>
+              <TableHead className="text-center">Overall Score</TableHead>
+              <TableHead className="text-center">
+                Fastest Completion Time
+              </TableHead>
+              <TableHead className="text-center">Datetime</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {displayedData.map((user, index) => (
+              <TableRow
+                key={index}
+                className="bg-neutral border-muted hover:bg-light"
+              >
+                <TableCell className="text-center">{user.username}</TableCell>
+                <TableCell className="text-center">
+                  {user.highest_score}
+                </TableCell>
+                <TableCell className="text-center">
+                  {user.time_elapsed + " seconds"}
+                </TableCell>
+                <TableCell className="text-center">{user.timestamp}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 };

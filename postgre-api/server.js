@@ -17,39 +17,42 @@ let user = "testuser";
 app.use(cors());
 app.use(express.json());
 
-app.get("/api/web/player-stats", async (req, res) => {
+app.get("/api/web/overview-card-stats", async (req, res) => {
   try {
     // Fetching data from the database for player stats
-    const totalPlayersQuery = 'SELECT COUNT(*) FROM public."user"';
+    const totalPlayersQuery = `SELECT COUNT(*) FROM public."user" AS total_players`;
     /*const onlinePlayersQuery =
       'SELECT COUNT(*) FROM public."user" WHERE online = true';*/
+    const totalRoomsQuery = `SELECT COUNT(*) FROM public.level_completion`;
     const tutorialRoomStatsQuery = `
       SELECT COUNT(DISTINCT username) AS total_players, 
              ROUND(AVG(completed::int), 2) AS completion_rate, 
-             ROUND(AVG("time"), 0) AS avg_time
+             ROUND(AVG("time_elapsed"), 0) AS avg_time
       FROM public.level_completion 
       WHERE level_type = 'Tutorial'`;
     const trainingRoomStatsQuery = `
       SELECT COUNT(DISTINCT username) AS total_players, 
              ROUND(AVG(completed::int), 2) AS completion_rate, 
-             ROUND(AVG("time"), 0) AS avg_time
+             ROUND(AVG("time_elapsed"), 0) AS avg_time
       FROM public.level_completion 
       WHERE level_type = 'Training'`;
     const escapeRoomStatsQuery = `
       SELECT COUNT(DISTINCT username) AS total_players, 
              ROUND(AVG(completed::int), 2) AS completion_rate, 
-             ROUND(AVG("time"), 0) AS avg_time
+             ROUND(AVG("time_elapsed"), 0) AS avg_time
       FROM public.level_completion 
       WHERE level_type = 'Escape Room'`;
 
     const totalPlayersResult = await pool.query(totalPlayersQuery);
     //const onlinePlayersResult = await client.query(onlinePlayersQuery);
+    const totalRoomsResult = await pool.query(totalRoomsQuery);
     const tutorialRoomStatsResult = await pool.query(tutorialRoomStatsQuery);
     const trainingRoomStatsResult = await pool.query(trainingRoomStatsQuery);
     const escapeRoomStatsResult = await pool.query(escapeRoomStatsQuery);
 
     res.json({
       totalPlayers: totalPlayersResult.rows[0].count,
+      totalRooms: totalRoomsResult.rows[0].count,
       //onlinePlayers: onlinePlayersResult.rows[0].count,
       tutorialRoomStats: tutorialRoomStatsResult.rows[0],
       trainingRoomStats: trainingRoomStatsResult.rows[0],
@@ -58,6 +61,35 @@ app.get("/api/web/player-stats", async (req, res) => {
   } catch (error) {
     console.error("Error fetching player stats:", error);
     res.status(500).json({ error: "Failed to fetch player stats" });
+  }
+});
+
+app.get("/api/web/player-table", async (req, res) => {
+  try {
+    const leaderboardQuery = `
+    SELECT username, score AS highest_score, time_elapsed, "timestamp" 
+      FROM (
+          SELECT username, time_elapsed, score, "timestamp",
+                RANK() OVER (PARTITION BY username ORDER BY score DESC) AS rnk
+          FROM public.level_completion
+          WHERE level_type = 'Escape Room'
+      ) ranked
+    WHERE rnk = 1
+    ORDER BY highest_score DESC;`;
+
+    const leaderboardResult = await pool.query(leaderboardQuery);
+
+    const formattedData = leaderboardResult.rows.map((row) => ({
+      ...row,
+      timestamp: row.timestamp
+        ? row.timestamp.toISOString().slice(0, 19).replace("T", " ")
+        : null,
+    }));
+
+    res.json({ leaderboardData: formattedData });
+  } catch (error) {
+    console.error("Error fetching leaderboard data:", error);
+    res.status(500).json({ error: "Failed to fetch leaderboard data" });
   }
 });
 
