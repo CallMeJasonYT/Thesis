@@ -3,15 +3,10 @@ services:
     build:
       context: ./teacher-panel
       dockerfile: Dockerfile
-    volumes:
-      - ./teacher-panel:/app
-      - /app/node_modules
-      - /app/.next
     ports:
       - "3000:3000"
     environment:
       - WATCHPACK_POLLING=true
-    command: yarn run dev
 
   websocket-server:
     build:

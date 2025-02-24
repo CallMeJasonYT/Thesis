@@ -40,8 +40,10 @@ const OverviewStatsCards = () => {
       setOnlinePlayers(data.count);
     };
 
-    const handleActiveRooms = (data: { rooms: number }) => {
-      setActiveRooms(data.rooms);
+    const handleActiveRooms = (data: {
+      rooms: Record<string, { count: number; users: string[] }>;
+    }) => {
+      setActiveRooms(Object.keys(data.rooms).length);
     };
 
     addListener("online-players-response", handleOnlinePlayers);
@@ -62,7 +64,10 @@ const OverviewStatsCards = () => {
 
   return (
     <div className="space-y-4">
-      <WebSocketHandler onOnlinePlayersUpdate={setOnlinePlayers} />
+      <WebSocketHandler
+        onOnlinePlayersUpdate={setOnlinePlayers}
+        onActiveRoomsUpdate={setActiveRooms}
+      />
 
       <div className="grid gap-1 md:gap-3 lg:gap-6 sm:grid-cols-2">
         <StatsCard

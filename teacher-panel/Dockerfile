@@ -1,13 +1,41 @@
-FROM node:20-alpine
+FROM jitesoft/node-yarn AS base
 
-WORKDIR /app
+# Install dependencies
+FROM base AS depends
+WORKDIR /usr/src/app
+COPY package.json* package-lock.json* ./
+RUN yarn install --frozen-lockfile --quiet
 
-COPY package.json yarn.lock* ./
-
-RUN yarn install
-
+# Build the app
+FROM base AS builder
+WORKDIR /usr/src/app
+COPY --from=depends /usr/src/app/node_modules ./node_modules
 COPY . .
+ENV NEXT_TELEMETRY_DISABLED=1
 
+RUN yarn run build
+
+# Run the app
+FROM base AS runner
+WORKDIR /usr/src/app
+
+RUN addgroup --system --gid 1007 nextjs
+RUN adduser --system --uid 1007 nextjs
+
+RUN mkdir .next
+RUN chown nextjs:nextjs .next
+
+COPY --from=builder --chown=nextjs:nextjs /usr/src/app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nextjs /usr/src/app/.next ./.next
+COPY --from=builder --chown=nextjs:nextjs /usr/src/app/public ./public
+COPY --from=builder --chown=nextjs:nextjs /usr/src/app/next.config.ts ./next.config.ts
+COPY --from=builder --chown=nextjs:nextjs /usr/src/app/package.json ./package.json
+
+ENV NODE_ENV=production
+
+ENV HOSTNAME="0.0.0.0"
 EXPOSE 3000
+ENV PORT=3000
 
-CMD ["yarn", "dev"]
+USER nextjs
+CMD ["node", "server.js"]
