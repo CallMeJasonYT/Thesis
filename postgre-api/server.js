@@ -6,13 +6,11 @@ const port = 3030;
 
 const pool = new Pool({
   user: "root",
-  host: "173.18.0.4",
+  host: "host.docker.internal",
   database: "postgres_thesis",
   password: "root",
   port: 5432,
 });
-
-let user = "testuser";
 
 app.use(cors());
 app.use(express.json());
@@ -99,16 +97,35 @@ app.post("/api/player/validate", async (req, res) => {
 
   try {
     const result = await pool.query(
-      'SELECT id FROM "user" WHERE username = $1 AND password = $2',
+      'SELECT uuid FROM "user" WHERE username = $1 AND password = $2',
       [username, password]
     );
 
     if (result.rows.length > 0) {
-      const playerId = result.rows[0].id;
-      user = result.rows[0].username;
-      res.json({ playerId, username: result.rows[0].username });
+      const uuid = result.rows[0].uuid;
+      console.log(uuid);
+      res.json({ playerUUID: uuid });
     } else {
       res.status(401).send("Invalid credentials");
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Database error");
+  }
+});
+
+app.post("/api/player/uuid", async (req, res) => {
+  const { username } = req.body;
+
+  try {
+    const result = await pool.query(
+      'SELECT UUID FROM "user" WHERE username = $1',
+      [username]
+    );
+
+    if (result.rows.length > 0) {
+      const uuid = result.rows[0].id;
+      res.json({ userID: uuid });
     }
   } catch (err) {
     console.error(err);

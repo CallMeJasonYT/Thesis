@@ -9,7 +9,7 @@ const Footer = () => {
       <div>
         Made with <span className="animate-pulse">❤️</span> by{" "}
         <Link
-          className="ml-1 text-red-400 hover:opacity-75 transition-all font-bold transform-gpu"
+          className="ml-1 text-red-400 hover:opacity-75 transition-all font-bold"
           href="https://github.com/CallMeJasonYT"
           target="_blank"
           draggable={false}

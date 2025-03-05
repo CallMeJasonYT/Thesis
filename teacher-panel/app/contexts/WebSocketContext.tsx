@@ -10,6 +10,7 @@ import React, {
 
 interface WebSocketContextType {
   ws: WebSocket | null;
+  isConnected: boolean; // New state to track connection status
   sendMessage: (message: object) => void;
   addListener: (type: string, callback: (data: any) => void) => void;
   removeListener: (type: string, callback: (data: any) => void) => void;
@@ -23,13 +24,15 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [ws, setWs] = useState<WebSocket | null>(null);
+  const [isConnected, setIsConnected] = useState(false); // Track connection status
   const listeners = useRef(new Map<string, Set<(data: any) => void>>());
 
   useEffect(() => {
-    const socket = new WebSocket("ws://localhost:8080");
+    const socket = new WebSocket("ws://host.docker.internal", "web-panel");
 
     socket.onopen = () => {
       console.log("WebSocket connected");
+      setIsConnected(true); // Set the connection status to true
     };
 
     socket.onmessage = (event) => {
@@ -41,7 +44,8 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
     socket.onclose = () => {
       console.log("WebSocket disconnected");
-      setTimeout(() => setWs(new WebSocket("ws://localhost:3030")), 3000); // Auto-reconnect
+      setIsConnected(false); // Set the connection status to false
+      setTimeout(() => setWs(new WebSocket("ws://host.docker.internal")), 3000); // Auto-reconnect
     };
 
     setWs(socket);
@@ -68,7 +72,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <WebSocketContext.Provider
-      value={{ ws, sendMessage, addListener, removeListener }}
+      value={{ ws, isConnected, sendMessage, addListener, removeListener }}
     >
       {children}
     </WebSocketContext.Provider>

@@ -1,8 +1,10 @@
+// components/Navbar.tsx
 import { type ReactElement } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import NotificationSlider from "./NotificationSlider";
 
-const categories = ["Overview", "Activities", "Players"];
+const categories = ["Overview", "Activity", "Players"];
 
 const Navbar = async (): Promise<ReactElement> => {
   return (
@@ -38,7 +40,10 @@ const Navbar = async (): Promise<ReactElement> => {
           ))}
         </div>
       </div>
+
+      <NotificationSlider />
     </nav>
   );
 };
+
 export default Navbar;

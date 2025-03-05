@@ -8,3 +8,5 @@ export { default as RoomsOpen } from "./roomsOpen";
 export { default as PlayersEntered } from "./playersEntered";
 export { default as CompletedIcon } from "./completedIcon";
 export { default as StopwatchIcon } from "./stopwatchIcon";
+export { default as NotificationIcon } from "./notificationIcon";
+export { default as XIcon } from "./xIcon";

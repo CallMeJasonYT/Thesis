@@ -10,7 +10,7 @@ const MainPage = async (): Promise<ReactElement> => {
           Manage players, monitor activities, and control the system
           efficiently.
         </p>
-        <button className="bg-primary text-white font-bold px-6 py-3 rounded-lg shadow-lg hover:bg-tertiary transition-all transform-gpu">
+        <button className="bg-primary text-white font-bold px-6 py-3 rounded-lg shadow-lg hover:bg-tertiary transition-all">
           <Link href="/Overview">Go to Overview</Link>
         </button>
       </div>

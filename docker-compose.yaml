@@ -16,7 +16,7 @@ services:
       - ./websocket-server:/app
       - /app/node_modules
     ports:
-      - "8080:8080"
+      - "80:80"
     environment:
       - WATCHPACK_POLLING=true
     command: yarn start
@@ -30,9 +30,6 @@ services:
       - /app/node_modules
     ports:
       - "3030:3030"
-    networks:
-      network:
-        ipv4_address: 173.18.0.6
     environment:
       - WATCHPACK_POLLING=true
     command: yarn start
@@ -44,13 +41,11 @@ services:
       POSTGRES_PASSWORD: root
       DATABASE_PORT: 5432
       POSTGRES_DB: postgres_thesis
+      POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
       - db-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    networks:
-      network:
-        ipv4_address: 173.18.0.4
 
   pg-admin:
     image: dpage/pgadmin4
@@ -60,16 +55,6 @@ services:
       - PGADMIN_LISTEN_PORT=5050
     ports:
       - "5050:5050"
-    networks:
-      network:
-        ipv4_address: 173.18.0.5
 
 volumes:
   db-data:
-networks:
-  network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 173.18.0.0/16
-          gateway: 173.18.0.1
