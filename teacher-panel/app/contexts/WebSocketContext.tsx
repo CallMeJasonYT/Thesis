@@ -10,7 +10,7 @@ import React, {
 
 interface WebSocketContextType {
   ws: WebSocket | null;
-  isConnected: boolean; // New state to track connection status
+  isConnected: boolean;
   sendMessage: (message: object) => void;
   addListener: (type: string, callback: (data: any) => void) => void;
   removeListener: (type: string, callback: (data: any) => void) => void;
@@ -32,7 +32,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
     socket.onopen = () => {
       console.log("WebSocket connected");
-      setIsConnected(true); // Set the connection status to true
+      setIsConnected(true);
     };
 
     socket.onmessage = (event) => {
@@ -44,7 +44,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
     socket.onclose = () => {
       console.log("WebSocket disconnected");
-      setIsConnected(false); // Set the connection status to false
+      setIsConnected(false);
       setTimeout(() => setWs(new WebSocket("ws://host.docker.internal")), 3000); // Auto-reconnect
     };
 

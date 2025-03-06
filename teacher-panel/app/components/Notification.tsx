@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
 
 interface NotificationProps {
+  username: string;
   message: React.ReactNode; // The general notification message
   onDismiss: () => void;
   onInspect: () => void;

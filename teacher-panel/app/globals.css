@@ -70,3 +70,28 @@ main {
 .card:hover {
   animation: borderAnimation 1.5s infinite linear;
 }
+
+@keyframes bell-ring {
+  0% {
+    transform: rotate(0deg);
+    color: red;
+  }
+  25% {
+    transform: rotate(-15deg);
+  }
+  50% {
+    transform: rotate(15deg);
+    color: white;
+  }
+  75% {
+    transform: rotate(-10deg);
+  }
+  100% {
+    transform: rotate(0deg);
+    color: red;
+  }
+}
+
+.animate-bell {
+  animation: bell-ring 1s ease-in-out infinite;
+}

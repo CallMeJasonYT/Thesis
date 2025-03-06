@@ -1,6 +1,4 @@
 import Screenshot from "@/app/components/Screenshot";
-import RecordsTable from "../../components/RecordsTable";
-import OverviewStatsCards from "@/app/components/OverviewStatsCards";
 
 const Activity = () => {
   return (

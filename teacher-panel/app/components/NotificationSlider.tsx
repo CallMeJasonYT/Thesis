@@ -6,15 +6,32 @@ import { useWebSocket } from "../contexts/WebSocketContext";
 
 const NotificationSlider = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [notifications, setNotifications] = useState<{ message: string }[]>([]);
-  const { addListener, removeListener } = useWebSocket();
+  const [notifications, setNotifications] = useState<
+    { username: string; message: string }[]
+  >([]);
+  const { sendMessage, addListener, removeListener, isConnected } =
+    useWebSocket();
+
+  const hasNotifications = notifications.length > 0;
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
   const handleDismiss = (index: number) => {
-    setNotifications((prev) => prev.filter((_, i) => i !== index));
+    setNotifications((prev) => {
+      const updatedNotifications = [...prev];
+      const dismissedNotification = updatedNotifications.splice(index, 1)[0];
+
+      if (dismissedNotification) {
+        sendMessage({
+          type: "DismissNotification",
+          username: dismissedNotification.username,
+        });
+      }
+
+      return updatedNotifications;
+    });
   };
 
   const handleStageTimeNotification = (data: {
@@ -24,30 +41,45 @@ const NotificationSlider = () => {
     time: string;
   }) => {
     const message = `⚠️ ${data.username} has been stuck in ${data.room}, stage ${data.stage}, for ${data.time} seconds!`;
-    setNotifications((prev) => [...prev, { message }]);
+    setNotifications((prev) => [...prev, { username: data.username, message }]);
+  };
+
+  const handleStoredNotifications = (data: { notifications: any[] }) => {
+    const storedMessages = data.notifications.map((notif) => ({
+      username: notif.username,
+      message: `⚠️ ${notif.username} has been stuck in ${notif.room}, stage ${notif.stage}, for ${notif.time} seconds!`,
+    }));
+
+    setNotifications((prev) => [...prev, ...storedMessages]);
   };
 
   useEffect(() => {
-    // Add the listener when the component mounts
+    addListener("StoredStageNotifications", handleStoredNotifications);
     addListener("StageTimeNotification", handleStageTimeNotification);
 
-    // Cleanup listener when the component unmounts
+    if (isConnected) {
+      sendMessage({ type: "StoredStageNotifications" });
+    }
+
     return () => {
       removeListener("StageTimeNotification", handleStageTimeNotification);
+      removeListener("StoredStageNotifications", handleStoredNotifications);
     };
-  }, [addListener, removeListener]);
+  }, [addListener, removeListener, sendMessage, isConnected]);
 
   return (
     <div>
       <button onClick={toggleSidebar}>
-        <span style={{ display: isSidebarOpen ? "none" : "block" }}>
-          <NotificationIcon className="text-white w-8" />
-        </span>
+        <NotificationIcon
+          className={`w-8 transition-all ${
+            hasNotifications ? "animate-bell text-red-500" : "text-white"
+          }`}
+        />
       </button>
 
       {/* Sidebar overlay */}
       <div
-        className={`fixed inset-0 bg-neutral transition-opacity ${
+        className={`fixed inset-0 bg-dark transition-opacity ${
           isSidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
         onClick={toggleSidebar}
@@ -59,7 +91,7 @@ const NotificationSlider = () => {
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="relative p-4 text-center">
+        <div className="relative p-6 text-center">
           <div className="flex justify-between">
             <h3 className="font-semibold text-xl">Notifications</h3>
             <button onClick={toggleSidebar}>
@@ -71,6 +103,7 @@ const NotificationSlider = () => {
             {notifications.map((notification, index) => (
               <Notification
                 key={index}
+                username={notification.username} // Pass username to Notification component
                 message={notification.message}
                 onDismiss={() => handleDismiss(index)}
                 onInspect={() => console.log("Inspect Now clicked")}

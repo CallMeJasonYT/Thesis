@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useWebSocket } from "../contexts/WebSocketContext";
+import Image from "next/image";
 
 const Screenshot = () => {
   const { sendMessage, addListener, removeListener } = useWebSocket();
@@ -43,7 +44,9 @@ const Screenshot = () => {
         <div className="mt-4">
           <h3 className="text-xl font-semibold">Screenshot:</h3>
           <div className="w-full max-w-[720px] aspect-video mx-auto">
-            <img
+            <Image
+              width={1280}
+              height={720}
               src={`data:image/png;base64,${screenshot}`}
               alt="Screenshot"
               className="w-full h-auto object-cover rounded-lg shadow-lg"

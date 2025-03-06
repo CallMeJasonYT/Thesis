@@ -11,9 +11,10 @@ const wss = new WebSocket.Server({
   },
 });
 
+let webPanel = null;
 const clients = new Map();
 const roomsActivity = new Map();
-let webPanel = null;
+const notifications = [];
 
 console.log("WebSocket server is running on ws://localhost:80");
 
@@ -58,6 +59,12 @@ function handleMessage(ws, data) {
         rooms: Object.fromEntries(roomsActivity),
       });
       break;
+    case "StoredStageNotifications":
+      if (ws === webPanel) {
+        notifications.forEach((notification) => {
+          ws.send(JSON.stringify(notification));
+        });
+      }
     case "active-rooms":
       assignRoom(ws, data.room, data.uuid);
       break;
@@ -70,6 +77,8 @@ function handleMessage(ws, data) {
     case "StageTimeNotification":
       forwardStageTime(data);
       break;
+    case "DismissNotification":
+      eraseNotification(data);
   }
 }
 
@@ -129,11 +138,24 @@ function forwardScreenshot(data) {
 }
 
 function forwardStageTime(data) {
+  notifications.push(data);
   if (webPanel && webPanel.readyState === WebSocket.OPEN) {
     console.log("Forwarding Stage Notification to Web Panel.");
     webPanel.send(JSON.stringify(data));
   } else {
     console.log("Web Panel is not connected.");
+  }
+}
+
+function eraseNotification(data) {
+  const username = data.username;
+
+  const index = notifications.findIndex((notif) => notif.username === username);
+  if (index !== -1) {
+    notifications.splice(index, 1);
+    console.log(`Notification for ${username} erased.`);
+  } else {
+    console.log(`No notification found for ${username}.`);
   }
 }
 

@@ -17,6 +17,7 @@ const config: Config = {
         neutral: "var(--color-neutral)",
         light: "var(--color-light)",
         muted: "var(--color-muted)",
+        dark: "var(--color-dark)",
       },
       maxWidth: {
         xl: "var(--breakpoint-xl)",
@@ -34,6 +35,7 @@ const config: Config = {
           "--color-neutral": process.env.NEXT_PUBLIC_NEUTRAL_COLOR!,
           "--color-light": process.env.NEXT_PUBLIC_LIGHT_COLOR!,
           "--color-muted": process.env.NEXT_PUBLIC_MUTED_COLOR!,
+          "--color-dark": process.env.NEXT_PUBLIC_DARK_COLOR!,
           "--breakpoint-xl": process.env.NEXT_PUBLIC_BREAKPOINT_XL!,
         },
       });
