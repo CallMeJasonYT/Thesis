@@ -23,7 +23,7 @@ const RecordsTable: React.FC<{ top?: number }> = ({ top }) => {
     const fetchStats = async () => {
       try {
         const response = await fetch(
-          "http://localhost:3030/api/web/player-table"
+          `http://${process.env.NEXT_PUBLIC_SERVERIP}:${process.env.NEXT_PUBLIC_APIPORT}/api/web/player-table`
         );
         const fetchedData = await response.json();
 

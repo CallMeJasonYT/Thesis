@@ -24,11 +24,14 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [ws, setWs] = useState<WebSocket | null>(null);
-  const [isConnected, setIsConnected] = useState(false); // Track connection status
+  const [isConnected, setIsConnected] = useState(false);
   const listeners = useRef(new Map<string, Set<(data: any) => void>>());
 
   useEffect(() => {
-    const socket = new WebSocket("ws://host.docker.internal", "web-panel");
+    const socket = new WebSocket(
+      `ws://${process.env.NEXT_PUBLIC_SERVERIP}`,
+      "web-panel"
+    );
 
     socket.onopen = () => {
       console.log("WebSocket connected");
@@ -45,7 +48,16 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     socket.onclose = () => {
       console.log("WebSocket disconnected");
       setIsConnected(false);
-      setTimeout(() => setWs(new WebSocket("ws://host.docker.internal")), 3000); // Auto-reconnect
+      setTimeout(
+        () =>
+          setWs(
+            new WebSocket(
+              `ws://${process.env.NEXT_PUBLIC_SERVERIP}`,
+              "web-panel"
+            )
+          ),
+        3000
+      ); // Auto-reconnect
     };
 
     setWs(socket);

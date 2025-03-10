@@ -19,12 +19,11 @@ const OverviewStatsCards = () => {
   const [onlinePlayers, setOnlinePlayers] = useState(0);
   const [activeRooms, setActiveRooms] = useState(0);
 
-  // Fetch API stats when component mounts
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const response = await fetch(
-          "http://localhost:3030/api/web/overview-card-stats"
+          `http://${process.env.NEXT_PUBLIC_SERVERIP}:${process.env.NEXT_PUBLIC_APIPORT}/api/web/overview-card-stats`
         );
         const data = await response.json();
         console.log("Fetched Stats:", data);
@@ -36,7 +35,6 @@ const OverviewStatsCards = () => {
     fetchStats();
   }, []);
 
-  // WebSocket event handlers
   useEffect(() => {
     const handleOnlinePlayers = (data: { count: number }) => {
       setOnlinePlayers(data.count);

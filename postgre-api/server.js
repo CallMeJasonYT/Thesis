@@ -2,14 +2,14 @@ const express = require("express");
 const { Pool } = require("pg");
 const cors = require("cors");
 const app = express();
-const port = 3030;
+const port = process.env.API_PORT;
 
 const pool = new Pool({
   user: "root",
   host: "host.docker.internal",
   database: "postgres_thesis",
   password: "root",
-  port: 5432,
+  port: process.env.DB_PORT,
 });
 
 app.use(cors());
@@ -19,8 +19,6 @@ app.get("/api/web/overview-card-stats", async (req, res) => {
   try {
     // Fetching data from the database for player stats
     const totalPlayersQuery = `SELECT COUNT(*) FROM public."user" AS total_players`;
-    /*const onlinePlayersQuery =
-      'SELECT COUNT(*) FROM public."user" WHERE online = true';*/
     const totalRoomsQuery = `SELECT COUNT(*) FROM public.level_completion`;
     const tutorialRoomStatsQuery = `
       SELECT COUNT(DISTINCT username) AS total_players, 

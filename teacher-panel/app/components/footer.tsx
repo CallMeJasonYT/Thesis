@@ -5,7 +5,6 @@ import Link from "next/link";
 const Footer = () => {
   return (
     <footer className="z-[-1] mt-auto pt-5 flex flex-col justify-center gap-2 items-center text-sm opacity-75">
-      {/* Credits */}
       <div>
         Made with <span className="animate-pulse">❤️</span> by{" "}
         <Link

@@ -7,6 +7,7 @@ import Navbar from "./components/navbar";
 import Footer from "./components/footer";
 import { cn } from "./utils/classnameMerge";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
+import { NotificationProvider } from "./contexts/NotificationContext";
 
 export const metadata: Metadata = {
   title: "Admin Panel",
@@ -36,9 +37,11 @@ const RootLayout = ({
     >
       <div className="min-h-screen px-7 pb-5 max-w-xl mx-auto flex flex-col gap-5">
         <WebSocketProvider>
-          <Navbar />
-          {children}
-          <Footer />
+          <NotificationProvider>
+            <Navbar />
+            {children}
+            <Footer />
+          </NotificationProvider>
         </WebSocketProvider>
       </div>
     </body>

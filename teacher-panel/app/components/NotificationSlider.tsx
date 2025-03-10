@@ -1,16 +1,18 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { NotificationIcon, XIcon } from "../icons";
 import Notification from "./Notification";
 import { useWebSocket } from "../contexts/WebSocketContext";
+import { useNotification } from "../contexts/NotificationContext"; // Use the notification context
 
 const NotificationSlider = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [notifications, setNotifications] = useState<
-    { username: string; message: string }[]
-  >([]);
+  const { notifications, addNotification, removeNotification } =
+    useNotification();
   const { sendMessage, addListener, removeListener, isConnected } =
     useWebSocket();
+  const router = useRouter();
 
   const hasNotifications = notifications.length > 0;
 
@@ -18,20 +20,17 @@ const NotificationSlider = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const handleDismiss = (index: number) => {
-    setNotifications((prev) => {
-      const updatedNotifications = [...prev];
-      const dismissedNotification = updatedNotifications.splice(index, 1)[0];
-
-      if (dismissedNotification) {
-        sendMessage({
-          type: "DismissNotification",
-          username: dismissedNotification.username,
-        });
-      }
-
-      return updatedNotifications;
+  const handleDismiss = (username: string) => {
+    removeNotification(username);
+    sendMessage({
+      type: "DismissNotification",
+      username,
     });
+  };
+
+  const handleInspect = (username: string) => {
+    toggleSidebar();
+    router.push(`/Inspect?username=${username}`);
   };
 
   const handleStageTimeNotification = (data: {
@@ -41,7 +40,7 @@ const NotificationSlider = () => {
     time: string;
   }) => {
     const message = `⚠️ ${data.username} has been stuck in ${data.room}, stage ${data.stage}, for ${data.time} seconds!`;
-    setNotifications((prev) => [...prev, { username: data.username, message }]);
+    addNotification({ username: data.username, message });
   };
 
   const handleStoredNotifications = (data: { notifications: any[] }) => {
@@ -50,12 +49,18 @@ const NotificationSlider = () => {
       message: `⚠️ ${notif.username} has been stuck in ${notif.room}, stage ${notif.stage}, for ${notif.time} seconds!`,
     }));
 
-    setNotifications((prev) => [...prev, ...storedMessages]);
+    storedMessages.forEach(addNotification);
+  };
+
+  // Handle notification removal when a player disconnects
+  const handleRemoveUserNotifications = (data: { username: string }) => {
+    removeNotification(data.username);
   };
 
   useEffect(() => {
     addListener("StoredStageNotifications", handleStoredNotifications);
     addListener("StageTimeNotification", handleStageTimeNotification);
+    addListener("RemoveUserNotifications", handleRemoveUserNotifications);
 
     if (isConnected) {
       sendMessage({ type: "StoredStageNotifications" });
@@ -64,6 +69,7 @@ const NotificationSlider = () => {
     return () => {
       removeListener("StageTimeNotification", handleStageTimeNotification);
       removeListener("StoredStageNotifications", handleStoredNotifications);
+      removeListener("RemoveUserNotifications", handleRemoveUserNotifications);
     };
   }, [addListener, removeListener, sendMessage, isConnected]);
 
@@ -77,7 +83,6 @@ const NotificationSlider = () => {
         />
       </button>
 
-      {/* Sidebar overlay */}
       <div
         className={`fixed inset-0 bg-dark transition-opacity ${
           isSidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
@@ -85,7 +90,6 @@ const NotificationSlider = () => {
         onClick={toggleSidebar}
       ></div>
 
-      {/* Sidebar */}
       <div
         className={`fixed left-0 top-0 w-full sm:w-96 md:w-[400px] lg:w-[500px] xl:w-[700px] h-full bg-zinc-950 transition-all transform ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -103,10 +107,10 @@ const NotificationSlider = () => {
             {notifications.map((notification, index) => (
               <Notification
                 key={index}
-                username={notification.username} // Pass username to Notification component
+                username={notification.username}
                 message={notification.message}
-                onDismiss={() => handleDismiss(index)}
-                onInspect={() => console.log("Inspect Now clicked")}
+                onDismiss={() => handleDismiss(notification.username)}
+                onInspect={() => handleInspect(notification.username)}
               />
             ))}
           </ul>

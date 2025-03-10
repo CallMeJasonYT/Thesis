@@ -14,9 +14,10 @@ const wss = new WebSocket.Server({
 let webPanel = null;
 const clients = new Map();
 const roomsActivity = new Map();
-const notifications = [];
+const uuidToUsername = new Map();
+let notifications = [];
 
-console.log("WebSocket server is running on ws://localhost:80");
+console.log("WebSocket server has started Running!");
 
 wss.on("connection", (ws, request) => {
   const protocol = request.headers["sec-websocket-protocol"];
@@ -48,7 +49,7 @@ wss.on("connection", (ws, request) => {
 function handleMessage(ws, data) {
   switch (data.type) {
     case "initial-connection":
-      assignUUID(ws, data.playerUUID);
+      assignUUID(ws, data.playerUUID, data.username);
       break;
     case "online-players-request":
       broadcast({ type: "online-players-response", count: clients.size });
@@ -69,7 +70,7 @@ function handleMessage(ws, data) {
       assignRoom(ws, data.room, data.uuid);
       break;
     case "ScreenshotRequest":
-      requestScreenshot(data.uuid);
+      requestScreenshot(data.username);
       break;
     case "ScreenshotUnityResponse":
       forwardScreenshot(data);
@@ -79,14 +80,19 @@ function handleMessage(ws, data) {
       break;
     case "DismissNotification":
       eraseNotification(data);
+    case "SendHint":
+      forwardHint(data);
   }
 }
 
-function assignUUID(ws, uuid) {
+function assignUUID(ws, uuid, username) {
   const clientInfo = clients.get(ws);
   if (clientInfo) {
     clientInfo.uuid = uuid;
-    console.log(`Assigned UUID ${uuid} to connection`);
+    uuidToUsername.set(uuid, username);
+    console.log(
+      `Assigned UUID ${uuid} to connection with username ${username}`
+    );
   }
 }
 
@@ -118,12 +124,12 @@ function assignRoom(ws, room, uuid) {
   });
 }
 
-function requestScreenshot(uuid) {
-  const targetClient = findClientByUUID(uuid);
+function requestScreenshot(username) {
+  const targetClient = findClientByUsername(username);
   if (targetClient) {
     targetClient.send(JSON.stringify({ type: "ScreenshotUnityRequest" }));
   } else {
-    console.log(`Client with UUID ${uuid} not found or not connected.`);
+    console.log(`Client with username ${username} not found or not connected.`);
   }
 }
 
@@ -138,7 +144,17 @@ function forwardScreenshot(data) {
 }
 
 function forwardStageTime(data) {
+  // Remove any existing notifications with the same username
+  const index = notifications.findIndex(
+    (notif) => notif.username === data.username
+  );
+  if (index !== -1) {
+    notifications.splice(index, 1);
+    console.log(`Old notification for ${data.username} removed.`);
+  }
+
   notifications.push(data);
+
   if (webPanel && webPanel.readyState === WebSocket.OPEN) {
     console.log("Forwarding Stage Notification to Web Panel.");
     webPanel.send(JSON.stringify(data));
@@ -159,9 +175,34 @@ function eraseNotification(data) {
   }
 }
 
+function forwardHint(data) {
+  const username = data.username;
+  const targetClient = findClientByUsername(username);
+  if (targetClient) {
+    targetClient.send(
+      JSON.stringify({ type: "IncomingHint", message: data.message })
+    );
+  }
+}
+
 function findClientByUUID(uuid) {
   for (const [ws, clientInfo] of clients.entries()) {
     if (clientInfo.uuid === uuid) return ws;
+  }
+  return null;
+}
+
+function findClientByUsername(username) {
+  // Step 1: Find the uuid based on the username
+  for (const [uuid, storedUsername] of uuidToUsername.entries()) {
+    if (storedUsername === username) {
+      // Step 2: Now find the client by uuid in the clients map and return the ws connection
+      for (const [ws, clientInfo] of clients.entries()) {
+        if (clientInfo.uuid === uuid) {
+          return ws;
+        }
+      }
+    }
   }
   return null;
 }
@@ -179,6 +220,13 @@ function handleDisconnection(ws) {
   console.log(`Client with UUID ${clientInfo.uuid} disconnected`);
   if (clientInfo.room) {
     removeUserFromRoom(clientInfo.room, clientInfo.uuid);
+  }
+
+  // Get the username based on the client UUID
+  const username = uuidToUsername.get(clientInfo.uuid);
+  if (username) {
+    removeUserNotifications(username); // Remove Notifications based on username
+    uuidToUsername.delete(clientInfo.uuid); // Delete the UUID -> Username Mapping
   }
 
   clients.delete(ws);
@@ -204,6 +252,21 @@ function removeUserFromRoom(room, uuid) {
     type: "active-rooms-response",
     rooms: Object.fromEntries(roomsActivity),
   });
+}
+
+function removeUserNotifications(username) {
+  const initialLength = notifications.length;
+  notifications = notifications.filter((notif) => notif.username !== username);
+
+  if (notifications.length !== initialLength) {
+    console.log(`Removed all notifications for ${username}`);
+
+    if (webPanel && webPanel.readyState === WebSocket.OPEN) {
+      webPanel.send(
+        JSON.stringify({ type: "RemoveUserNotifications", username })
+      );
+    }
+  }
 }
 
 function broadcast(data) {
