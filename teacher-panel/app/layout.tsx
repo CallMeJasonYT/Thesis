@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     images: [{ url: "/images/admin.png", width: 128, height: 128 }],
   },
 };
-export const viewport: Viewport = { themeColor: "#E6E6E6" };
+export const viewport: Viewport = { themeColor: "#18181B" };
 
 const satoshi: NextFont = localFont({
   src: "../font/Satoshi.ttf",

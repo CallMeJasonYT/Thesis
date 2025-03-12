@@ -74,10 +74,10 @@ const NotificationSlider = () => {
   }, [addListener, removeListener, sendMessage, isConnected]);
 
   return (
-    <div>
+    <div className="max-h-[24px] xl:max-h-[32px]">
       <button onClick={toggleSidebar}>
         <NotificationIcon
-          className={`w-8 transition-all ${
+          className={`w-6 xl:w-8 transition-all ${
             hasNotifications ? "animate-bell text-red-500" : "text-white"
           }`}
         />
@@ -91,7 +91,7 @@ const NotificationSlider = () => {
       ></div>
 
       <div
-        className={`fixed left-0 top-0 w-full sm:w-96 md:w-[400px] lg:w-[500px] xl:w-[700px] h-full bg-zinc-950 transition-all transform ${
+        className={`fixed left-0 top-0 w-full sm:w-96 md:w-[400px] lg:w-[500px] xl:w-[700px] z-[15] h-full bg-zinc-950 transition-all transform ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >

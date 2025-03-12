@@ -3,15 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #09090b;
-    --foreground: #fafafa;
-  }
+  --background: #09090b;
+  --foreground: #fafafa;
 }
 
 body {
@@ -94,4 +87,49 @@ main {
 
 .animate-bell {
   animation: bell-ring 1s ease-in-out infinite;
+}
+
+/* Background color of calendar */
+.react-datepicker {
+  background-color: #27272a !important; /* Dark background */
+  border: 1px solid white !important;
+}
+
+/* Header (Month & Year) */
+.react-datepicker__header {
+  background-color: #141414 !important;
+  border-bottom: 1px solid #4b5563 !important;
+  color: white;
+}
+
+.react-datepicker__current-month,
+.react-datepicker__day-name,
+.react-datepicker__day {
+  color: white !important;
+}
+
+.react-datepicker__day--in-selecting-range {
+  background-color: #baa898 !important;
+}
+
+/* Highlighted selected day */
+.react-datepicker__day--selected {
+  background-color: #0c9988 !important;
+  color: white !important;
+  border-radius: 50%;
+}
+
+.react-datepicker__month--selecting-range
+  .react-datepicker__day--in-range:not(
+    .react-datepicker__day--in-selecting-range,
+    .react-datepicker__month-text--in-selecting-range,
+    .react-datepicker__quarter-text--in-selecting-range,
+    .react-datepicker__year-text--in-selecting-range
+  ) {
+  background-color: #0c9988 !important;
+}
+
+/* Hover effect */
+.react-datepicker__day:hover {
+  background-color: #ea8f7f !important;
 }
