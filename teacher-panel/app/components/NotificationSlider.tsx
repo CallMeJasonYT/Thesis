@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { NotificationIcon, XIcon } from "../icons";
 import Notification from "./Notification";
@@ -33,29 +33,33 @@ const NotificationSlider = () => {
     router.push(`/Inspect?username=${username}`);
   };
 
-  const handleStageTimeNotification = (data: {
-    username: string;
-    room: string;
-    stage: string;
-    time: string;
-  }) => {
-    const message = `⚠️ ${data.username} has been stuck in ${data.room}, stage ${data.stage}, for ${data.time} seconds!`;
-    addNotification({ username: data.username, message });
-  };
+  // Wrap handlers in useCallback to prevent unnecessary re-renders
+  const handleStageTimeNotification = useCallback(
+    (data: { username: string; room: string; stage: string; time: string }) => {
+      const message = `⚠️ ${data.username} has been stuck in ${data.room}, stage ${data.stage}, for ${data.time} seconds!`;
+      addNotification({ username: data.username, message });
+    },
+    [addNotification]
+  );
 
-  const handleStoredNotifications = (data: { notifications: any[] }) => {
-    const storedMessages = data.notifications.map((notif) => ({
-      username: notif.username,
-      message: `⚠️ ${notif.username} has been stuck in ${notif.room}, stage ${notif.stage}, for ${notif.time} seconds!`,
-    }));
+  const handleStoredNotifications = useCallback(
+    (data: { notifications: any[] }) => {
+      const storedMessages = data.notifications.map((notif) => ({
+        username: notif.username,
+        message: `⚠️ ${notif.username} has been stuck in ${notif.room}, stage ${notif.stage}, for ${notif.time} seconds!`,
+      }));
 
-    storedMessages.forEach(addNotification);
-  };
+      storedMessages.forEach(addNotification);
+    },
+    [addNotification]
+  );
 
-  // Handle notification removal when a player disconnects
-  const handleRemoveUserNotifications = (data: { username: string }) => {
-    removeNotification(data.username);
-  };
+  const handleRemoveUserNotifications = useCallback(
+    (data: { username: string }) => {
+      removeNotification(data.username);
+    },
+    [removeNotification]
+  );
 
   useEffect(() => {
     addListener("StoredStageNotifications", handleStoredNotifications);
@@ -71,7 +75,15 @@ const NotificationSlider = () => {
       removeListener("StoredStageNotifications", handleStoredNotifications);
       removeListener("RemoveUserNotifications", handleRemoveUserNotifications);
     };
-  }, [addListener, removeListener, sendMessage, isConnected]);
+  }, [
+    addListener,
+    removeListener,
+    sendMessage,
+    isConnected,
+    handleStoredNotifications,
+    handleStageTimeNotification,
+    handleRemoveUserNotifications,
+  ]);
 
   return (
     <div className="max-h-[24px] xl:max-h-[32px]">

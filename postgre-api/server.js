@@ -24,19 +24,19 @@ app.get("/api/web/overview-card-stats", async (req, res) => {
     const totalRoomsQuery = `SELECT COUNT(*) FROM public.level_completion`;
     const tutorialRoomStatsQuery = `
       SELECT COUNT(DISTINCT username) AS total_players, 
-             ROUND(AVG(completed::int), 2) AS completion_rate, 
+             ROUND(AVG(completed::int)*100, 2) AS completion_rate, 
              ROUND(AVG("time_elapsed"), 0) AS avg_time
       FROM public.level_completion 
       WHERE level_type = 'Tutorial'`;
     const trainingRoomStatsQuery = `
       SELECT COUNT(DISTINCT username) AS total_players, 
-             ROUND(AVG(completed::int), 2) AS completion_rate, 
+             ROUND(AVG(completed::int)*100, 2) AS completion_rate, 
              ROUND(AVG("time_elapsed"), 0) AS avg_time
       FROM public.level_completion 
       WHERE level_type = 'Training'`;
     const escapeRoomStatsQuery = `
       SELECT COUNT(DISTINCT username) AS total_players, 
-             ROUND(AVG(completed::int), 2) AS completion_rate, 
+             ROUND(AVG(completed::int)*100, 2) AS completion_rate, 
              ROUND(AVG("time_elapsed"), 0) AS avg_time
       FROM public.level_completion 
       WHERE level_type = 'Escape Room'`;
@@ -130,6 +130,85 @@ app.post("/api/player/uuid", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).send("Database error");
+  }
+});
+
+app.post("/api/web/levelStats", async (req, res) => {
+  const { startDate, endDate } = req.body;
+
+  if (!startDate || !endDate) {
+    return res
+      .status(400)
+      .json({ error: "Start date and end date are required." });
+  }
+
+  // Convert dates to ISO format for SQL query comparison
+  const startDateISO = new Date(startDate).toISOString();
+  const endDateISO = new Date(endDate).toISOString();
+
+  try {
+    const tutorialRoomStatsQuery = `
+      SELECT 
+        TO_CHAR("timestamp", 'DD/MM/YYYY') AS date, 
+        COUNT(DISTINCT username) AS total_players, 
+        ROUND(AVG(completed::int)*100, 2) AS completion_rate, 
+        ROUND(AVG("time_elapsed"), 0) AS avg_time
+      FROM public.level_completion 
+      WHERE level_type = 'Tutorial'
+        AND "timestamp" BETWEEN $1 AND $2
+      GROUP BY TO_CHAR("timestamp", 'DD/MM/YYYY')
+      ORDER BY date;`;
+
+    const trainingRoomStatsQuery = `
+      SELECT 
+        TO_CHAR("timestamp", 'DD/MM/YYYY') AS date, 
+        COUNT(DISTINCT username) AS total_players, 
+        ROUND(AVG(completed::int)*100, 2) AS completion_rate, 
+        ROUND(AVG("time_elapsed"), 0) AS avg_time
+      FROM public.level_completion 
+      WHERE level_type = 'Training'
+        AND "timestamp" BETWEEN $1 AND $2
+      GROUP BY TO_CHAR("timestamp", 'DD/MM/YYYY')
+      ORDER BY date;`;
+
+    const escapeRoomStatsQuery = `
+      SELECT 
+        TO_CHAR("timestamp", 'DD/MM/YYYY') AS date, 
+        COUNT(DISTINCT username) AS total_players, 
+        ROUND(AVG(completed::int)*100, 2) AS completion_rate, 
+        ROUND(AVG("time_elapsed"), 0) AS avg_time
+      FROM public.level_completion 
+      WHERE level_type = 'Escape Room'
+        AND "timestamp" BETWEEN $1 AND $2
+      GROUP BY TO_CHAR("timestamp", 'DD/MM/YYYY')
+      ORDER BY date;`;
+
+    // Execute all the queries
+    const tutorialRoomStats = await pool.query(tutorialRoomStatsQuery, [
+      startDateISO,
+      endDateISO,
+    ]);
+    const trainingRoomStats = await pool.query(trainingRoomStatsQuery, [
+      startDateISO,
+      endDateISO,
+    ]);
+    const escapeRoomStats = await pool.query(escapeRoomStatsQuery, [
+      startDateISO,
+      endDateISO,
+    ]);
+
+    // Format the result
+    const result = {
+      tutorial: tutorialRoomStats.rows,
+      training: trainingRoomStats.rows,
+      escapeRoom: escapeRoomStats.rows,
+    };
+
+    // Send the stats data as the response
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("Error fetching stats:", error);
+    res.status(500).json({ error: "Error fetching stats from the database." });
   }
 });
 

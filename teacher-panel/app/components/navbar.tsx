@@ -33,7 +33,7 @@ const Navbar = async (): Promise<ReactElement> => {
         {categories.map((category) => (
           <Link
             key={category}
-            className="px-4 py-1.5 flex gap-5 xl:text-lg items-center bg-neutral text-sm rounded-lg hover:opacity-75 hover:bg-secondary transition-all transform-gpu"
+            className="px-4 py-1.5 flex gap-5 xl:text-lg items-center bg-neutral text-sm rounded-lg hover:opacity-90 hover:bg-secondary transition-all transform-gpu"
             href={`/${category}/`}
             draggable={false}
           >

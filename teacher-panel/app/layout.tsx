@@ -1,6 +1,6 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
-import type { ReactElement, ReactNode } from "react";
+import { Suspense, type ReactElement, type ReactNode } from "react";
 import { type NextFont } from "next/dist/compiled/@next/font";
 import localFont from "next/font/local";
 import Navbar from "./components/navbar";
@@ -39,7 +39,7 @@ const RootLayout = ({
         <WebSocketProvider>
           <NotificationProvider>
             <Navbar />
-            {children}
+            <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
             <Footer />
           </NotificationProvider>
         </WebSocketProvider>
