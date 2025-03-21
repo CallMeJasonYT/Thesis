@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { BurgerIcon, XIcon } from "../icons"; // Ensure you have these icons
+import { BurgerIcon, XIcon } from "../icons";
 
 const categories = ["Overview", "Activity", "Players", "Stats"];
 

@@ -84,15 +84,15 @@ const OverviewStatsCards = () => {
         />
 
         <StatsCard
-          title="Room Status"
+          title="Games Status"
           stats={[
             {
-              label: "Total Rooms",
+              label: "Total Games",
               value: stats.totalRooms,
               icon: <RoomsTotal className="text-secondary" />,
             },
             {
-              label: "Active Rooms",
+              label: "Active Games",
               value: activeRooms,
               icon: <RoomsOpen className="text-emerald-800" />,
             },

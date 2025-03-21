@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Screenshot from "../../components/Screenshot";
 import { useWebSocket } from "../../contexts/WebSocketContext";
-import { useNotification } from "../../contexts/NotificationContext"; // Use the context
+import { useNotification } from "../../contexts/NotificationContext";
 
 const InspectPage = () => {
   const searchParams = useSearchParams();

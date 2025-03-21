@@ -3,7 +3,7 @@ import { type ReactElement } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import NotificationSlider from "./NotificationSlider";
-import BurgerMenu from "./BurgerMenu"; // Import the sidebar
+import BurgerMenu from "./BurgerMenu";
 
 const categories = ["Overview", "Activity", "Players", "Stats"];
 

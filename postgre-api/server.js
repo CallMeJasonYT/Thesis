@@ -42,7 +42,6 @@ app.get("/api/web/overview-card-stats", async (req, res) => {
       WHERE level_type = 'Escape Room'`;
 
     const totalPlayersResult = await pool.query(totalPlayersQuery);
-    //const onlinePlayersResult = await client.query(onlinePlayersQuery);
     const totalRoomsResult = await pool.query(totalRoomsQuery);
     const tutorialRoomStatsResult = await pool.query(tutorialRoomStatsQuery);
     const trainingRoomStatsResult = await pool.query(trainingRoomStatsQuery);
@@ -51,7 +50,6 @@ app.get("/api/web/overview-card-stats", async (req, res) => {
     res.json({
       totalPlayers: totalPlayersResult.rows[0].count,
       totalRooms: totalRoomsResult.rows[0].count,
-      //onlinePlayers: onlinePlayersResult.rows[0].count,
       tutorialRoomStats: tutorialRoomStatsResult.rows[0],
       trainingRoomStats: trainingRoomStatsResult.rows[0],
       escapeRoomStats: escapeRoomStatsResult.rows[0],
@@ -62,7 +60,7 @@ app.get("/api/web/overview-card-stats", async (req, res) => {
   }
 });
 
-app.get("/api/web/player-table", async (req, res) => {
+app.get("/api/web/leaderboard-table", async (req, res) => {
   try {
     const leaderboardQuery = `
     SELECT username, score AS highest_score, time_elapsed, "timestamp" 
@@ -88,6 +86,48 @@ app.get("/api/web/player-table", async (req, res) => {
   } catch (error) {
     console.error("Error fetching leaderboard data:", error);
     res.status(500).json({ error: "Failed to fetch leaderboard data" });
+  }
+});
+
+app.get("/api/web/groups", async (req, res) => {
+  try {
+    const groupQuery = `
+    SELECT DISTINCT u."group" FROM "user" u 
+    WHERE u."group" IS NOT NULL
+    ORDER BY u."group" ASC`;
+
+    const groupResult = await pool.query(groupQuery);
+    res.json({
+      groupData: groupResult.rows,
+    });
+  } catch (error) {
+    console.error("Error fetching groups:", error);
+    res.status(500).json({ error: "Failed to fetch groups" });
+  }
+});
+
+app.get("/api/web/player-table", async (req, res) => {
+  try {
+    const playerQuery = `
+    SELECT DISTINCT u."username", 
+           TO_CHAR(lc."timestamp", 'FMMonth DD, YYYY HH12:MI:SS AM') AS "lastPlayed", 
+           u."group"
+    FROM "user" u
+    INNER JOIN "level_completion" lc 
+        ON lc."username" = u."username"
+    WHERE lc."timestamp" = (
+        SELECT MAX(lc2."timestamp") 
+        FROM "level_completion" lc2
+        WHERE lc2."username" = u."username") 
+    AND u."group" IS NOT NULL;`;
+
+    const playerResult = await pool.query(playerQuery);
+    res.json({
+      playerData: playerResult.rows,
+    });
+  } catch (error) {
+    console.error("Error fetching player data:", error);
+    res.status(500).json({ error: "Failed to fetch player data" });
   }
 });
 
