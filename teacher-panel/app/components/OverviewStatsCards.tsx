@@ -47,7 +47,6 @@ const OverviewStatsCards = () => {
     addListener("online-players-response", handleOnlinePlayers);
     addListener("active-rooms-response", handleActiveRooms);
 
-    // Wait for WebSocket to be connected
     if (isConnected) {
       sendMessage({ type: "online-players-request" });
       sendMessage({ type: "active-rooms-request" });
@@ -64,7 +63,7 @@ const OverviewStatsCards = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-8">
       <div className="grid gap-1 md:gap-3 lg:gap-6 sm:grid-cols-2">
         <StatsCard
           title="Player Status"
@@ -102,44 +101,28 @@ const OverviewStatsCards = () => {
       </div>
 
       <div className="grid gap-1 md:gap-3 lg:gap-6 sm:grid-cols-3">
-        {[
-          {
-            title: "Tutorial Room",
-            stats: stats.tutorialRoomStats,
-            color: "text-secondary",
-          },
-          {
-            title: "Training Room",
-            stats: stats.trainingRoomStats,
-            color: "text-tertiary",
-          },
-          {
-            title: "Escape Room",
-            stats: stats.escapeRoomStats,
-            color: "text-quaternary",
-          },
-        ].map(({ title, stats, color }) => (
+        {stats.roomStats.map((level: any) => (
           <StatsCard
-            key={title}
-            title={title}
+            key={level.level_name}
+            title={`${level.level_name}`}
             stats={[
               {
                 label: "Total Players Played",
-                value: stats.total_players,
+                value: level.total_players,
                 icon: <PlayersEntered className="text-tertiary" />,
               },
               {
                 label: "Completion Rate",
-                value: `${stats.completion_rate}%`,
+                value: `${level.completion_rate}%`,
                 icon: <CompletedIcon className="text-primary" />,
               },
               {
                 label: "Average Completion Time (s)",
-                value: stats.avg_time,
+                value: level.avg_time,
                 icon: <StopwatchIcon className="text-secondary" />,
               },
             ]}
-            colorClass={color}
+            colorClass="text-secondary"
           />
         ))}
       </div>

@@ -8,7 +8,8 @@ import {
   TableHead,
   TableCell,
 } from "./Table";
-import { ArrowIcon, ChartIcon, CloseIcon } from "../icons";
+import { ChartIcon } from "../icons";
+import { useRouter } from "next/navigation";
 
 interface User {
   Username: string;
@@ -16,31 +17,31 @@ interface User {
 }
 
 const PlayerTable = () => {
+  const router = useRouter();
   const [groups, setGroups] = useState<string[]>([]); // Store only group names
   const [selectedGroup, setSelectedGroup] = useState<string>("");
   const [groupedPlayers, setGroupedPlayers] = useState<{
     [key: string]: User[];
   }>({});
 
+  const handleGroupStatsButton = () => {
+    router.push(`/Stats/${selectedGroup}`);
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch group data
         const groupResponse = await fetch(
           `http://${process.env.NEXT_PUBLIC_SERVERIP}:${process.env.NEXT_PUBLIC_APIPORT}/api/web/groups`
         );
         const groupData = await groupResponse.json();
+        console.log(groupData);
         const groupNames = groupData.groupData.map(
-          (groupObj: { group: string }) => groupObj.group
+          (groupObj: { group_name: string }) => groupObj.group_name
         );
         setGroups(groupNames);
+        setSelectedGroup(groupNames[0]);
 
-        // Automatically select the first group if available
-        if (groupNames.length > 0) {
-          setSelectedGroup(groupNames[0]);
-        }
-
-        // Fetch player data and group them
         const playerResponse = await fetch(
           `http://${process.env.NEXT_PUBLIC_SERVERIP}:${process.env.NEXT_PUBLIC_APIPORT}/api/web/player-table`
         );
@@ -50,10 +51,10 @@ const PlayerTable = () => {
 
         const playersByGroup: { [key: string]: User[] } = {};
         playerData.playerData.forEach((player: any) => {
-          if (!playersByGroup[player.group]) {
-            playersByGroup[player.group] = [];
+          if (!playersByGroup[player.group_name]) {
+            playersByGroup[player.group_name] = [];
           }
-          playersByGroup[player.group].push({
+          playersByGroup[player.group_name].push({
             Username: player.username,
             lastPlayed: player.lastPlayed,
           });
@@ -68,7 +69,6 @@ const PlayerTable = () => {
     fetchData();
   }, []);
 
-  // Get users for the selected group
   const selectedGroupUsers = groupedPlayers[selectedGroup] || [];
 
   return (
@@ -81,9 +81,9 @@ const PlayerTable = () => {
           onChange={(e) => setSelectedGroup(e.target.value)}
         >
           {groups.length > 0 ? (
-            groups.map((group, index) => (
-              <option key={index} value={group}>
-                {"Group " + group}
+            groups.map((group_name, index) => (
+              <option key={index} value={group_name}>
+                {"Group " + group_name}
               </option>
             ))
           ) : (
@@ -92,7 +92,10 @@ const PlayerTable = () => {
             </option>
           )}
         </select>
-        <button className="ml-4 bg-primary text-white px-2 py-1 rounded-lg shadow-lg hover:bg-tertiary transition-all">
+        <button
+          className="ml-4 bg-primary text-white px-2 py-1 rounded-lg shadow-lg hover:bg-tertiary transition-all"
+          onClick={handleGroupStatsButton}
+        >
           Show Group Stats
         </button>
       </div>

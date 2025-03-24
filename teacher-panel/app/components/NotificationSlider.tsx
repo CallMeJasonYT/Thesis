@@ -1,10 +1,10 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { NotificationIcon, XIcon } from "../icons";
 import Notification from "./Notification";
 import { useWebSocket } from "../contexts/WebSocketContext";
-import { useNotification } from "../contexts/NotificationContext"; // Use the notification context
+import { useNotification } from "../contexts/NotificationContext";
 
 const NotificationSlider = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -13,8 +13,9 @@ const NotificationSlider = () => {
   const { sendMessage, addListener, removeListener, isConnected } =
     useWebSocket();
   const router = useRouter();
-
   const hasNotifications = notifications.length > 0;
+
+  const hasFetchedNotifications = useRef(false); // Prevent multiple requests
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -22,10 +23,7 @@ const NotificationSlider = () => {
 
   const handleDismiss = (username: string) => {
     removeNotification(username);
-    sendMessage({
-      type: "DismissNotification",
-      username,
-    });
+    sendMessage({ type: "DismissNotification", username });
   };
 
   const handleInspect = (username: string) => {
@@ -33,7 +31,6 @@ const NotificationSlider = () => {
     router.push(`/Inspect?username=${username}`);
   };
 
-  // Wrap handlers in useCallback to prevent unnecessary re-renders
   const handleStageTimeNotification = useCallback(
     (data: { username: string; room: string; stage: string; time: string }) => {
       const message = `⚠️ ${data.username} has been stuck in ${data.room}, stage ${data.stage}, for ${data.time} seconds!`;
@@ -66,8 +63,9 @@ const NotificationSlider = () => {
     addListener("StageTimeNotification", handleStageTimeNotification);
     addListener("RemoveUserNotifications", handleRemoveUserNotifications);
 
-    if (isConnected) {
+    if (isConnected && !hasFetchedNotifications.current) {
       sendMessage({ type: "StoredStageNotifications" });
+      hasFetchedNotifications.current = true; // Mark as fetched
     }
 
     return () => {
