@@ -8,6 +8,7 @@ import Footer from "./components/footer";
 import { cn } from "./utils/classnameMerge";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
+import { SharedDataProvider } from "./contexts/SharedDataContext";
 
 export const metadata: Metadata = {
   title: "Admin Panel",
@@ -38,9 +39,11 @@ const RootLayout = ({
       <div className="min-h-screen px-7 pb-5 max-w-xl mx-auto flex flex-col gap-5">
         <WebSocketProvider>
           <NotificationProvider>
-            <Navbar />
-            <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
-            <Footer />
+            <SharedDataProvider>
+              <Navbar />
+              <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+              <Footer />
+            </SharedDataProvider>
           </NotificationProvider>
         </WebSocketProvider>
       </div>

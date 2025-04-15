@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
+import { useSharedData } from "../../../contexts/SharedDataContext";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import {
@@ -13,154 +14,204 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-// Define types for stats data
 interface StatsEntry {
   room: string;
   date: string;
   username: string;
-  avg_time: number;
+  attributes: {
+    [key: string]: number;
+  };
 }
 
 const StatsPage = () => {
+  const { statAttributes, formattedStages } = useSharedData();
+
+  useEffect(() => {
+    const levelNames = Object.keys(formattedStages);
+    if (levelNames.length > 0) {
+      setSelectedRoom(levelNames[0]);
+    }
+    if (statAttributes.length > 0) {
+      setSelectedStat(statAttributes[0].attribute_name);
+    }
+  }, [formattedStages, statAttributes]);
+
   const [selectedRoom, setSelectedRoom] = useState<string>("");
+  const [selectedStat, setSelectedStat] = useState<string>("");
+  const [selectedStage, setSelectedStage] = useState<string>("Overall");
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [endDate, setEndDate] = useState<Date>(new Date());
   const [statsData, setStatsData] = useState<StatsEntry[]>([]);
-  const [roomOptions, setRoomOptions] = useState<string[]>([]);
 
   const params = useParams();
   const groupParam = params.group;
 
-  const setDefaultDates = () => {
+  useEffect(() => {
     const today = new Date();
     const start = new Date(today);
     start.setDate(today.getDate() - 7);
     setStartDate(start);
     setEndDate(today);
-  };
-
-  useEffect(() => {
-    setDefaultDates();
   }, []);
 
   useEffect(() => {
-    if (startDate && endDate) {
+    if (startDate && endDate && selectedRoom && selectedStat) {
       fetchStatsData(startDate, endDate);
     }
-  }, [startDate, endDate]);
+  }, [startDate, endDate, selectedRoom, selectedStat, selectedStage]);
 
   const fetchStatsData = async (startDate: Date, endDate: Date) => {
     try {
       const response = await fetch(
-        `http://${process.env.NEXT_PUBLIC_SERVERIP}:${process.env.NEXT_PUBLIC_APIPORT}/api/web/GrouplevelStats`,
+        `http://${process.env.NEXT_PUBLIC_SERVERIP}:${process.env.NEXT_PUBLIC_APIPORT}/api/web/groupStats`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             startDate: startDate.toISOString(),
             endDate: endDate.toISOString(),
             group: groupParam,
+            level: selectedRoom,
+            stage: selectedStage,
           }),
         }
       );
 
       const data = await response.json();
+      console.log(data);
 
-      // Extract unique room names from the response data and set the room options
-      const roomNames: string[] = data.groupLevelStats.map(
-        (entry: { level_name: string }) => entry.level_name
-      );
-      setRoomOptions([...new Set(roomNames)]);
-
-      // Map the fetched data to the StatsEntry type
       const formattedData: StatsEntry[] = data.groupLevelStats.map(
         (entry: {
           date: string;
           username: string;
           level_name: string;
-          avg_time: string;
+          attributes: Record<string, string | number>;
         }) => ({
           room: entry.level_name,
           date: entry.date,
           username: entry.username,
-          avg_time: parseInt(entry.avg_time),
+          attributes: entry.attributes,
         })
       );
 
       setStatsData(formattedData);
-
-      if (!selectedRoom && roomNames.length > 0) {
-        setSelectedRoom(roomNames[0]);
-      }
     } catch (error) {
       console.error("Error fetching stats data:", error);
     }
   };
 
   const filteredData = useMemo(() => {
+    const grouped = new Map<string, number>();
+
     return statsData
       .filter((entry) => entry.room === selectedRoom)
-      .map((entry) => ({
-        date: entry.date,
-        username: entry.username,
-        avg_time: entry.avg_time,
-      }));
-  }, [statsData, selectedRoom]);
+      .map((entry) => {
+        const value = entry.attributes[selectedStat] ?? 0;
+        const key = `${entry.date}-${value}`;
+
+        const count = grouped.get(key) || 0;
+        grouped.set(key, count + 1);
+
+        const jitter = count * 0.05;
+
+        return {
+          date: entry.date,
+          username: entry.username,
+          value: value + jitter,
+          realValue: value,
+        };
+      });
+  }, [statsData, selectedRoom, selectedStat]);
+
+  console.log(filteredData);
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (!active || !payload || payload.length === 0) return null;
     const data = payload[0].payload;
 
     return (
-      <div
-        className="custom-tooltip"
-        style={{
-          backgroundColor: "#27272a",
-          padding: "10px",
-          borderRadius: "6px",
-        }}
-      >
-        <p style={{ color: "#0C9988", fontWeight: "bold" }}>
-          Date: {data.date}
+      <div className="custom-tooltip bg-zinc-800 p-3 rounded-md">
+        <p className="text-cyan-400 font-semibold">Date: {data.date}</p>
+        <p className="text-white">User: {data.username}</p>
+        <p className="text-white">
+          {selectedStat}: {data.realValue}{" "}
         </p>
-        <p style={{ color: "#fff" }}>User: {data.username}</p>
-        <p style={{ color: "#fff" }}>Avg Time: {data.avg_time} sec</p>
       </div>
     );
   };
 
   return (
     <div className="p-6 bg-neutral rounded-lg shadow-md w-full mx-auto">
-      <h2 className="text-xl font-bold mb-4">Room Stats</h2>
+      <h2 className="text-xl font-bold mb-4">Level Stats</h2>
 
-      <div className="flex gap-8 items-center">
-        <div className="flex justify-start items-center mb-6 gap-2">
-          <p className="font-bold">Select Room:</p>
+      <div className="flex flex-wrap items-center gap-4 mb-6">
+        {/* Level Selector */}
+        <div className="flex flex-col sm:flex-row gap-2 items-center">
+          <label className="font-bold">Select Level:</label>
           <select
-            className="bg-neutral text-white border p-1 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+            className="bg-neutral text-white border p-1 rounded-md"
             value={selectedRoom}
-            onChange={(e) => setSelectedRoom(e.target.value)}
+            onChange={(e) => {
+              const newLevel = e.target.value;
+              setSelectedRoom(newLevel);
+            }}
           >
-            {roomOptions.length === 0 ? (
-              <option className="bg-gray-800" value="">
-                No rooms available
+            {Object.keys(formattedStages).map((levelName) => (
+              <option key={levelName} value={levelName} className="bg-gray-800">
+                {levelName}
               </option>
-            ) : (
-              roomOptions.map((room) => (
-                <option className="bg-gray-800" key={room} value={room}>
-                  {room.charAt(0).toUpperCase() + room.slice(1)}
+            ))}
+          </select>
+        </div>
+
+        {/* Stage Selector */}
+        <div className="flex flex-col sm:flex-row gap-2 items-center">
+          <label className="font-bold">Select Stage:</label>
+          <select
+            className="bg-neutral text-white border p-1 rounded-md"
+            value={selectedStage}
+            onChange={(e) => setSelectedStage(e.target.value)}
+          >
+            <option value="Overall" className="bg-gray-800">
+              Overall
+            </option>
+            {formattedStages[selectedRoom]
+              ?.filter((stageName) => stageName !== "Overall")
+              .map((stageName) => (
+                <option
+                  key={stageName}
+                  value={stageName}
+                  className="bg-gray-800"
+                >
+                  {stageName}
                 </option>
-              ))
-            )}
+              ))}
+          </select>
+        </div>
+
+        {/* Stat Selector */}
+        <div className="flex flex-col sm:flex-row gap-2 items-center">
+          <label className="font-bold">Select Stat:</label>
+          <select
+            className="bg-neutral text-white border p-1 rounded-md"
+            value={selectedStat}
+            onChange={(e) => setSelectedStat(e.target.value)}
+          >
+            {statAttributes.map((stat) => (
+              <option
+                key={stat.attribute_name}
+                value={stat.attribute_name}
+                className="bg-gray-800"
+              >
+                {stat.attribute_name}
+              </option>
+            ))}
           </select>
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <p className="font-bold">Select Date Range:</p>
-
         <DatePicker
           selected={startDate}
           onChange={(date) => date && setStartDate(date)}
@@ -168,11 +219,9 @@ const StatsPage = () => {
           startDate={startDate}
           endDate={endDate}
           dateFormat="yyyy-MM-dd"
-          className="p-1 border rounded-md bg-neutral w-full sm:w-auto"
+          className="p-1 border rounded-md bg-neutral"
         />
-
         <span className="font-bold">to</span>
-
         <DatePicker
           selected={endDate}
           onChange={(date) => date && setEndDate(date)}
@@ -181,14 +230,14 @@ const StatsPage = () => {
           endDate={endDate}
           minDate={startDate}
           dateFormat="yyyy-MM-dd"
-          className="p-1 border rounded-md bg-neutral w-full sm:w-auto"
+          className="p-1 border rounded-md bg-neutral"
         />
       </div>
 
       <div className="w-full h-[400px] flex items-center justify-center">
         {filteredData.length === 0 ? (
           <p className="text-gray-400 text-lg font-semibold">
-            No data available for these dates.
+            No data available for these filters.
           </p>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
@@ -202,17 +251,17 @@ const StatsPage = () => {
               />
               <YAxis
                 type="number"
-                dataKey="avg_time"
+                dataKey="value"
                 tick={{ fill: "#EA8F7F", fontSize: 14 }}
                 label={{
-                  value: "Avg Time (sec)",
+                  value: selectedStat,
                   angle: -90,
                   position: "insideLeft",
                 }}
               />
               <Tooltip content={<CustomTooltip />} />
               <Scatter
-                name="User Avg Time"
+                name={`User ${selectedStat}`}
                 data={filteredData}
                 fill="#0C9988"
               />

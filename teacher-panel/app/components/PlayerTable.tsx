@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import { useSharedData } from "../contexts/SharedDataContext";
 import {
   Table,
   TableHeader,
@@ -18,45 +19,44 @@ interface User {
 
 const PlayerTable = () => {
   const router = useRouter();
-  const [groups, setGroups] = useState<string[]>([]); // Store only group names
+  const { groups } = useSharedData();
   const [selectedGroup, setSelectedGroup] = useState<string>("");
-  const [groupedPlayers, setGroupedPlayers] = useState<{
-    [key: string]: User[];
-  }>({});
+  const [groupedPlayers, setGroupedPlayers] = useState<Record<string, User[]>>(
+    {}
+  );
 
   const handleGroupStatsButton = () => {
     router.push(`/Stats/${selectedGroup}`);
   };
 
+  const handleStatsButton = (username: string) => {
+    router.push(`/Stats/${selectedGroup}/${username}`);
+  };
+
   useEffect(() => {
+    if (groups.length > 0) {
+      setSelectedGroup(groups[0].group_name);
+    }
+  }, [groups]);
+
+  useEffect(() => {
+    if (!selectedGroup) return;
+
     const fetchData = async () => {
       try {
-        const groupResponse = await fetch(
-          `http://${process.env.NEXT_PUBLIC_SERVERIP}:${process.env.NEXT_PUBLIC_APIPORT}/api/web/groups`
-        );
-        const groupData = await groupResponse.json();
-        console.log(groupData);
-        const groupNames = groupData.groupData.map(
-          (groupObj: { group_name: string }) => groupObj.group_name
-        );
-        setGroups(groupNames);
-        setSelectedGroup(groupNames[0]);
-
         const playerResponse = await fetch(
-          `http://${process.env.NEXT_PUBLIC_SERVERIP}:${process.env.NEXT_PUBLIC_APIPORT}/api/web/player-table`
+          `http://${process.env.NEXT_PUBLIC_SERVERIP}:${process.env.NEXT_PUBLIC_APIPORT}/api/web/getGroupedPlayers`
         );
         const playerData = await playerResponse.json();
 
-        console.log(playerData);
-
-        const playersByGroup: { [key: string]: User[] } = {};
+        const playersByGroup: Record<string, User[]> = {};
         playerData.playerData.forEach((player: any) => {
           if (!playersByGroup[player.group_name]) {
             playersByGroup[player.group_name] = [];
           }
           playersByGroup[player.group_name].push({
             Username: player.username,
-            lastPlayed: player.lastPlayed,
+            lastPlayed: player.last_played,
           });
         });
 
@@ -67,7 +67,7 @@ const PlayerTable = () => {
     };
 
     fetchData();
-  }, []);
+  }, [selectedGroup]);
 
   const selectedGroupUsers = groupedPlayers[selectedGroup] || [];
 
@@ -81,9 +81,9 @@ const PlayerTable = () => {
           onChange={(e) => setSelectedGroup(e.target.value)}
         >
           {groups.length > 0 ? (
-            groups.map((group_name, index) => (
-              <option key={index} value={group_name}>
-                {"Group " + group_name}
+            groups.map((group, index) => (
+              <option key={index} value={group.group_name}>
+                {"Group " + group.group_name}
               </option>
             ))
           ) : (
@@ -118,7 +118,10 @@ const PlayerTable = () => {
                     {user.lastPlayed}
                   </TableCell>
                   <TableCell className="flex justify-end">
-                    <ChartIcon className="mr-5 w-6 h-6 text-secondary cursor-pointer" />
+                    <ChartIcon
+                      className="mr-5 w-6 h-6 text-secondary cursor-pointer"
+                      onClick={() => handleStatsButton(user.Username)}
+                    />
                   </TableCell>
                 </TableRow>
               ))

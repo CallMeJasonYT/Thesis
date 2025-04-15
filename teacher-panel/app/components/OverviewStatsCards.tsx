@@ -1,7 +1,9 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
 import StatsCard from "../components/StatsCard";
 import { useWebSocket } from "../contexts/WebSocketContext";
+import { useSharedData } from "../contexts/SharedDataContext";
 import {
   CompletedIcon,
   OnlineIcon,
@@ -13,6 +15,8 @@ import {
 } from "../icons";
 
 const OverviewStatsCards = () => {
+  const { formattedStages } = useSharedData();
+  const levels = Object.keys(formattedStages);
   const { sendMessage, addListener, removeListener, isConnected } =
     useWebSocket();
   const [stats, setStats] = useState<any>(null);
@@ -23,7 +27,7 @@ const OverviewStatsCards = () => {
     const fetchStats = async () => {
       try {
         const response = await fetch(
-          `http://${process.env.NEXT_PUBLIC_SERVERIP}:${process.env.NEXT_PUBLIC_APIPORT}/api/web/overview-card-stats`
+          `http://${process.env.NEXT_PUBLIC_SERVERIP}:${process.env.NEXT_PUBLIC_APIPORT}/api/web/overviewStats`
         );
         const data = await response.json();
         console.log("Fetched Stats:", data);
@@ -101,24 +105,34 @@ const OverviewStatsCards = () => {
       </div>
 
       <div className="grid gap-1 md:gap-3 lg:gap-6 sm:grid-cols-3">
-        {stats.roomStats.map((level: any) => (
+        {levels.map((level: string) => (
           <StatsCard
-            key={level.level_name}
-            title={`${level.level_name}`}
+            key={level}
+            title={level}
             stats={[
               {
                 label: "Total Players Played",
-                value: level.total_players,
+                value:
+                  stats?.roomStats.find(
+                    (stat: any) => stat.level_name === level
+                  )?.total_players ?? "N/A",
                 icon: <PlayersEntered className="text-tertiary" />,
               },
               {
                 label: "Completion Rate",
-                value: `${level.completion_rate}%`,
+                value: `${
+                  stats?.roomStats.find(
+                    (stat: any) => stat.level_name === level
+                  )?.completion_rate ?? "N/A"
+                }%`,
                 icon: <CompletedIcon className="text-primary" />,
               },
               {
                 label: "Average Completion Time (s)",
-                value: level.avg_time,
+                value:
+                  stats?.roomStats.find(
+                    (stat: any) => stat.level_name === level
+                  )?.avg_time ?? "N/A",
                 icon: <StopwatchIcon className="text-secondary" />,
               },
             ]}
