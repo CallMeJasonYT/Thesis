@@ -78,8 +78,6 @@ const StatsPage = () => {
       );
 
       const data = await response.json();
-      console.log(data);
-
       const formattedData: StatsEntry[] = data.groupLevelStats.map(
         (entry: {
           date: string;

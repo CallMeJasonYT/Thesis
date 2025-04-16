@@ -54,10 +54,6 @@ export const SharedDataProvider: React.FC<{ children: React.ReactNode }> = ({
         setFormattedStages(formattedStages);
         setGroups(groupData.groupData);
         setStatAttributes(statAttributeData.attributeData);
-
-        console.log("Fetched Stages:", formattedStages);
-        console.log("Fetched Groups:", groupData);
-        console.log("Fetched Attributes:", statAttributeData);
       } catch (err: any) {
         console.error(err);
       }
