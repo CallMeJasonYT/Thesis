@@ -92,6 +92,8 @@ const StatsPage = () => {
         })
       );
 
+      console.log(data);
+
       setStatsData(formattedData);
     } catch (error) {
       console.error("Error fetching stats data:", error);

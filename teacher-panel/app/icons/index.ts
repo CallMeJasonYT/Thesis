@@ -13,3 +13,5 @@ export { default as XIcon } from "./xIcon";
 export { default as BurgerIcon } from "./burgerIcon";
 export { default as ArrowIcon } from "./arrowIcon";
 export { default as ChartIcon } from "./chartIcon";
+export { default as FiltersIcon } from "./filtersIcon";
+export { default as CircleQuestionIcon } from "./circleQuestionIcon";

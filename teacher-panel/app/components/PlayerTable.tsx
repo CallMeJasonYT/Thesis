@@ -76,13 +76,17 @@ const PlayerTable = () => {
       <div className="flex items-center">
         <p className="mr-4">Select Group: </p>
         <select
-          className="bg-dark text-white border p-1 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+          className="bg-neutral text-white border p-1 rounded-md "
           value={selectedGroup}
           onChange={(e) => setSelectedGroup(e.target.value)}
         >
           {groups.length > 0 ? (
             groups.map((group, index) => (
-              <option key={index} value={group.group_name}>
+              <option
+                className="bg-gray-800"
+                key={index}
+                value={group.group_name}
+              >
                 {"Group " + group.group_name}
               </option>
             ))

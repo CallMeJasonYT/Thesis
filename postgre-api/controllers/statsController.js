@@ -46,10 +46,7 @@ export const getGroupStats = async (req, res) => {
       TO_CHAR(lc.level_timestamp, 'DD/MM/YYYY') AS date, 
       u.username,
       l.level_name,
-      CASE 
-        WHEN $5 = 'Overall' THEN SUM(m.mistake_count)
-        ELSE SUM(CASE WHEN sm.stage_name = $5 THEN m.mistake_count ELSE 0 END)
-      END AS "Mistakes",
+      SUM(m.mistake_count) AS "Mistakes",
       CASE
         WHEN $5 = 'Overall' THEN ROUND(AVG(lc.total_elapsed_time), 0)
         ELSE ROUND(AVG(sc.stage_elapsed_time), 0)
@@ -57,15 +54,15 @@ export const getGroupStats = async (req, res) => {
     FROM public.level_completion lc
       JOIN public.users u ON lc.user_id = u.uuid
       JOIN public.levels l ON lc.level_id = l.level_id
-      JOIN public.mistakes m ON lc.id = m.level_completion_id
       JOIN public.stage_completion sc ON lc.id = sc.level_completion_id
       JOIN public.stages s ON sc.stage_id = s.stage_id
-      LEFT JOIN public.stages sm ON m.stage_id = sm.stage_id
+      LEFT JOIN public.mistakes m ON lc.id = m.level_completion_id
+          AND m.stage_id = s.stage_id
     WHERE u.group_name = $1
       AND lc.level_timestamp BETWEEN $2 AND $3
       AND l.level_name = $4
       AND ($5 = 'Overall' OR s.stage_name = $5)
-    GROUP BY date, u.username, l.level_name
+    GROUP BY date, u.username, l.level_name, lc.id
     ORDER BY date, l.level_name`;
 
     const groupLevelResults = await pool.query(groupLevelStatsQuery, [
@@ -110,10 +107,7 @@ export const getUserStats = async (req, res) => {
       TO_CHAR(lc.level_timestamp, 'DD/MM/YYYY') AS date, 
       u.username,
       l.level_name,
-      CASE 
-        WHEN $5 = 'Overall' THEN SUM(m.mistake_count)
-        ELSE SUM(CASE WHEN sm.stage_name = $5 THEN m.mistake_count ELSE 0 END)
-      END AS "Mistakes",
+      SUM(m.mistake_count) AS "Mistakes",
       CASE
         WHEN $5 = 'Overall' THEN ROUND(AVG(lc.total_elapsed_time), 0)
         ELSE ROUND(AVG(sc.stage_elapsed_time), 0)

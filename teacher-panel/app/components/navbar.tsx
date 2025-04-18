@@ -5,7 +5,7 @@ import Image from "next/image";
 import NotificationSlider from "./NotificationSlider";
 import BurgerMenu from "./BurgerMenu";
 
-const categories = ["Overview", "Activity", "Players", "Stats"];
+const categories = ["Overview", "Players", "Leaderboard"];
 
 const Navbar = async (): Promise<ReactElement> => {
   return (

@@ -23,7 +23,14 @@ const RecordsTable: React.FC<{ top?: number }> = ({ top }) => {
     const fetchStats = async () => {
       try {
         const response = await fetch(
-          `http://${process.env.NEXT_PUBLIC_SERVERIP}:${process.env.NEXT_PUBLIC_APIPORT}/api/web/leaderboard-table`
+          `http://${process.env.NEXT_PUBLIC_SERVERIP}:${process.env.NEXT_PUBLIC_APIPORT}/api/web/leaderboard-table`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              recordsNumber: top,
+            }),
+          }
         );
         const fetchedData = await response.json();
 
@@ -42,9 +49,6 @@ const RecordsTable: React.FC<{ top?: number }> = ({ top }) => {
 
   return (
     <div className="space-y-4">
-      <p className="text-2xl font-bold text-left">
-        Escape Room Top 5 Leaderboard
-      </p>
       <div className="border border-light shadow-lg rounded-xl">
         <Table className="w-full overflow-x-auto">
           <TableHeader>
