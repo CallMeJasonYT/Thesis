@@ -5,6 +5,7 @@ import {
   leaderboardRoutes,
   attributesRoutes,
   statsRoutes,
+  playersRoutes,
 } from "./routes/index.js"; // Import the routes
 import dotenv from "dotenv";
 dotenv.config();
@@ -17,6 +18,7 @@ app.use(gameDataRoutes);
 app.use(leaderboardRoutes);
 app.use(attributesRoutes);
 app.use(statsRoutes);
+app.use(playersRoutes);
 
 app.listen(process.env.API_PORT, () => {
   console.log(`API server running on port: ${process.env.API_PORT}`);

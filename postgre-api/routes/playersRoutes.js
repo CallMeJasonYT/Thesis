@@ -1,7 +1,7 @@
 import express from "express";
 const router = express.Router();
-import { getGroupStats } from "../controllers/playersController.js";
+import { getGroupedPlayers } from "../controllers/playersController.js";
 
-router.post("/api/web/groupStats", getGroupStats);
+router.get("/api/web/getGroupedPlayers", getGroupedPlayers);
 
 export default router;
