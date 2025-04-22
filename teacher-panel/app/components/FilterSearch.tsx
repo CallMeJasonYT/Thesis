@@ -10,23 +10,85 @@ import "react-datepicker/dist/react-datepicker.css";
 
 const FilterSearch = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { formattedStages, statAttributes } = useSharedData();
+  const { formattedStages, statAttributes, setFilters, filters, isLoading } =
+    useSharedData();
 
+  // Local state for form values
   const [selectedLevel, setSelectedLevel] = useState("");
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [endDate, setEndDate] = useState<Date>(new Date());
-  const [selectedFilter, setSelectedFilter] = useState("option1");
-  const [attributeInputs, setAttributeInputs] = useState<
-    Record<string, number>
-  >({});
-  const [stageInputs, setStageInputs] = useState<Record<string, number>>({});
+  const [selectedFilter, setSelectedFilter] = useState("");
+  const [attributeInputs, setAttributeInputs] = useState<{
+    [key: string]: number;
+  }>({});
+  const [stageInputs, setStageInputs] = useState<{ [key: string]: number }>({});
 
+  // Initialize local state when context data is loaded
   useEffect(() => {
-    const levelNames = Object.keys(formattedStages);
-    if (levelNames.length > 0) {
-      setSelectedLevel(levelNames[0]);
+    if (!isLoading && filters) {
+      // Update local state from context
+      setSelectedLevel(filters.selectedLevel);
+      setStartDate(filters.startDate);
+      setEndDate(filters.endDate);
+      setSelectedFilter(filters.selectedFilter);
+      setAttributeInputs(filters.attributeInputs);
+      setStageInputs(filters.stageInputs);
     }
-  }, [formattedStages]);
+  }, [isLoading, filters]);
+
+  // Update stage inputs when selected level changes
+  useEffect(() => {
+    if (selectedLevel && formattedStages[selectedLevel]) {
+      const newStageInputs: Record<string, number> = {};
+      formattedStages[selectedLevel].forEach((stage) => {
+        // Preserve existing values or set to 100% if new
+        newStageInputs[stage] = stageInputs[stage] ?? 100;
+      });
+      setStageInputs(newStageInputs);
+    }
+  }, [selectedLevel, formattedStages]);
+
+  const handleApplyFiltersButton = () => {
+    // Apply the filters once when the user hits Apply
+    setFilters({
+      selectedLevel,
+      startDate,
+      endDate,
+      selectedFilter,
+      attributeInputs,
+      stageInputs,
+    });
+  };
+
+  // Return loading state or placeholder if data isn't ready
+  if (isLoading) {
+    return (
+      <div className="relative mt-2 mb-2">
+        <button
+          disabled
+          className="flex items-center gap-1 bg-gray-500 text-white px-3 py-1 rounded-lg font-bold cursor-not-allowed"
+        >
+          <FiltersIcon className="size-5" />
+          Loading Filters...
+        </button>
+      </div>
+    );
+  }
+
+  // No data loaded yet
+  if (!statAttributes.length || Object.keys(formattedStages).length === 0) {
+    return (
+      <div className="relative mt-2 mb-2">
+        <button
+          disabled
+          className="flex items-center gap-1 bg-gray-500 text-white px-3 py-1 rounded-lg font-bold cursor-not-allowed"
+        >
+          <FiltersIcon className="size-5" />
+          No Filter Data Available
+        </button>
+      </div>
+    );
+  }
 
   const renderStatSliders = () =>
     statAttributes.map((stat) => (
@@ -35,14 +97,14 @@ const FilterSearch = () => {
         className="flex flex-col items-start gap-1 w-full"
       >
         <label className="text-sm">
-          {stat.attribute_name}: {attributeInputs[stat.attribute_name] ?? 0}%
+          {stat.attribute_name}: {attributeInputs[stat.attribute_name] ?? 100}%
         </label>
         <input
           type="range"
           min="0"
           max="100"
           step="5"
-          value={attributeInputs[stat.attribute_name] ?? 0}
+          value={attributeInputs[stat.attribute_name] ?? 100}
           onChange={(e) =>
             setAttributeInputs((prev) => ({
               ...prev,
@@ -58,14 +120,14 @@ const FilterSearch = () => {
     formattedStages[selectedLevel]?.map((stage) => (
       <div key={stage} className="flex flex-col items-start gap-1 w-full">
         <label className="text-sm">
-          {stage}: {stageInputs[stage] ?? 0}%
+          {stage}: {stageInputs[stage] ?? 100}%
         </label>
         <input
           type="range"
           min="0"
           max="100"
           step="5"
-          value={stageInputs[stage] ?? 0}
+          value={stageInputs[stage] ?? 100}
           onChange={(e) =>
             setStageInputs((prev) => ({
               ...prev,
@@ -129,7 +191,7 @@ const FilterSearch = () => {
               </label>
               <RadioGroup
                 name="Filter Options"
-                defaultValue="option1"
+                value={selectedFilter}
                 onChange={(val) => setSelectedFilter(val)}
               >
                 {statAttributes.map((stat) => (
@@ -154,10 +216,10 @@ const FilterSearch = () => {
                 {/* Advanced Filters */}
                 <div className="flex flex-col gap-2">
                   <div className="flex flex-row items-center gap-1">
-                    <RadioButton value="option3" label="Advanced Filters" />
+                    <RadioButton value="advanced" label="Advanced Filters" />
                   </div>
 
-                  {selectedFilter === "option3" && (
+                  {selectedFilter === "advanced" && (
                     <div className="text-white bg-neutral rounded-lg p-2">
                       <p className="font-semibold mb-2">Adjust Weights (%)</p>
                       <p className="text-sm text-gray-300 mb-4 italic">
@@ -178,7 +240,9 @@ const FilterSearch = () => {
 
             {/* Date Picker */}
             <div className="flex flex-col flex-wrap gap-2">
-              <p className="font-bold text-white">Select Date Range:</p>
+              <p className="font-semibold text-white text-lg">
+                Select Date Range:
+              </p>
               <div className="flex flex-wrap items-center gap-2">
                 <DatePicker
                   selected={startDate}
@@ -206,7 +270,11 @@ const FilterSearch = () => {
 
           {/* Button */}
           <div className="flex justify-center sm:self-end">
-            <button className="w-full bg-primary text-white px-4 py-2 rounded-lg shadow-lg hover:bg-tertiary transition-all">
+            <button
+              className="w-full bg-primary text-white px-4 py-2 rounded-lg shadow-lg 
+            hover:bg-tertiary transition-all"
+              onClick={handleApplyFiltersButton}
+            >
               Apply Filters
             </button>
           </div>

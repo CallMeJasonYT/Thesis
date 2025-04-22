@@ -12,6 +12,7 @@ const RadioGroupContext = createContext<RadioGroupContextType | undefined>(
 
 type RadioGroupProps = {
   name: string;
+  value?: string;
   defaultValue?: string;
   onChange?: (value: string) => void;
   children: ReactNode;
@@ -19,15 +20,21 @@ type RadioGroupProps = {
 
 export const RadioGroup: React.FC<RadioGroupProps> = ({
   name,
+  value,
   defaultValue = "",
   onChange,
   children,
 }) => {
-  const [selectedValue, setSelectedValue] = useState(defaultValue);
+  const [internalValue, setInternalValue] = useState(defaultValue);
 
-  const handleChange = (value: string) => {
-    setSelectedValue(value);
-    onChange?.(value);
+  const isControlled = value !== undefined;
+  const selectedValue = isControlled ? value : internalValue;
+
+  const handleChange = (newValue: string) => {
+    if (!isControlled) {
+      setInternalValue(newValue);
+    }
+    onChange?.(newValue);
   };
 
   return (

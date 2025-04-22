@@ -8,77 +8,135 @@ import {
   TableHead,
   TableCell,
 } from "./Table";
+import { useSharedData } from "../contexts/SharedDataContext";
 
-interface UserRecord {
+interface LeaderboardRecord {
+  date: string;
   username: string;
-  highest_score: number;
-  time_elapsed: number;
-  timestamp: string;
+  attributes: {
+    [key: string]: number;
+  };
 }
 
 const RecordsTable: React.FC<{ top?: number }> = ({ top }) => {
-  const [data, setData] = useState<UserRecord[]>([]);
+  const { filters, isLoading, statAttributes } = useSharedData();
+  const [data, setData] = useState<LeaderboardRecord[]>([]);
+  const [isLoadingRecords, setIsLoadingRecords] = useState(false);
 
   useEffect(() => {
     const fetchStats = async () => {
+      if (!filters) return;
+
+      setIsLoadingRecords(true);
       try {
         const response = await fetch(
-          `http://${process.env.NEXT_PUBLIC_SERVERIP}:${process.env.NEXT_PUBLIC_APIPORT}/api/web/leaderboard-table`,
+          `http://${process.env.NEXT_PUBLIC_SERVERIP}:${process.env.NEXT_PUBLIC_APIPORT}/api/web/getLeaderboardRecords`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              recordsNumber: top,
-            }),
+            body: JSON.stringify(filters),
           }
         );
-        const fetchedData = await response.json();
 
-        console.log("Data:", fetchedData);
-        setData(fetchedData.leaderboardData);
+        if (!response.ok) {
+          throw new Error(`Server responded with status: ${response.status}`);
+        }
+
+        const fetchedData = await response.json();
+        setData(fetchedData.leaderboardResults);
       } catch (error) {
         console.error("Error fetching records:", error);
+        setData([]);
+      } finally {
+        setIsLoadingRecords(false);
       }
     };
 
     fetchStats();
-  }, []);
+  }, [filters]);
 
   // Slice to get the top X users if `top` is provided
   const displayedData = top ? data.slice(0, top) : data;
 
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <div className="text-white">Loading data...</div>
+      </div>
+    );
+  }
+
+  const totalColumns = 2 + statAttributes.length;
+
   return (
     <div className="space-y-4">
       <div className="border border-light shadow-lg rounded-xl">
-        <Table className="w-full overflow-x-auto">
-          <TableHeader>
-            <TableRow className="bg-neutral border-muted text-gray-500">
-              <TableHead className="text-center">Username</TableHead>
-              <TableHead className="text-center">Overall Score</TableHead>
-              <TableHead className="text-center">
-                Fastest Completion Time
-              </TableHead>
-              <TableHead className="text-center">Datetime</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {displayedData.map((user, index) => (
-              <TableRow
-                key={index}
-                className="bg-neutral border-muted hover:bg-light"
-              >
-                <TableCell className="text-center">{user.username}</TableCell>
-                <TableCell className="text-center">
-                  {user.highest_score}
-                </TableCell>
-                <TableCell className="text-center">
-                  {user.time_elapsed + " seconds"}
-                </TableCell>
-                <TableCell className="text-center">{user.timestamp}</TableCell>
+        <div className="max-h-96 overflow-y-auto">
+          <Table className="w-full">
+            <TableHeader>
+              <TableRow className="bg-neutral border-muted">
+                <TableHead className="text-center bg-neutral">
+                  Username
+                </TableHead>
+                <TableHead className="text-center bg-neutral">Date</TableHead>
+                {statAttributes.map((attribute) => (
+                  <TableHead
+                    key={attribute.attribute_name}
+                    className="text-center bg-neutral"
+                  >
+                    {attribute.attribute_name}
+                  </TableHead>
+                ))}
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {isLoadingRecords ? (
+                <TableRow className="bg-neutral border-muted">
+                  <TableCell
+                    colSpan={totalColumns}
+                    className="text-center py-4"
+                  >
+                    Loading records...
+                  </TableCell>
+                </TableRow>
+              ) : displayedData.length > 0 ? (
+                displayedData.map((record, index) => (
+                  <TableRow key={index} className="border-muted hover:bg-light">
+                    <TableCell className="text-center">
+                      {record.username}
+                    </TableCell>
+                    <TableCell className="text-center">{record.date}</TableCell>
+                    {statAttributes.map((attribute) => (
+                      <TableCell
+                        key={attribute.attribute_name}
+                        className="text-center"
+                      >
+                        {record.attributes &&
+                        record.attributes[attribute.attribute_name] !==
+                          undefined
+                          ? record.attributes[attribute.attribute_name]
+                          : "-"}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow className="bg-neutral border-muted">
+                  <TableCell
+                    colSpan={totalColumns}
+                    className="text-center py-4"
+                  >
+                    No records found with the current filters.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+
+      <div className="text-right text-sm text-gray-400">
+        {displayedData.length} records found
       </div>
     </div>
   );

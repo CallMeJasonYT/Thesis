@@ -2,16 +2,31 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 
+interface FilterState {
+  selectedLevel: string;
+  startDate: Date;
+  endDate: Date;
+  selectedFilter: string;
+  attributeInputs: Record<string, number>;
+  stageInputs: Record<string, number>;
+}
+
 interface SharedData {
   formattedStages: Record<string, string[]>;
   groups: { group_name: string }[];
   statAttributes: { attribute_name: string }[];
+  filters: FilterState | null;
+  setFilters: (filters: FilterState) => void;
+  isLoading: boolean; // Add loading state
 }
 
 const SharedDataContext = createContext<SharedData>({
   formattedStages: {},
   groups: [],
   statAttributes: [],
+  filters: null,
+  setFilters: () => {},
+  isLoading: true, // Default to loading
 });
 
 export const SharedDataProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -24,9 +39,12 @@ export const SharedDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [statAttributes, setStatAttributes] = useState<
     { attribute_name: string }[]
   >([]);
+  const [filters, setFilters] = useState<FilterState | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchAll = async () => {
+      setIsLoading(true);
       try {
         const [stageRes, groupRes, statAttrbutesRes] = await Promise.all([
           fetch(
@@ -54,17 +72,70 @@ export const SharedDataProvider: React.FC<{ children: React.ReactNode }> = ({
         setFormattedStages(formattedStages);
         setGroups(groupData.groupData);
         setStatAttributes(statAttributeData.attributeData);
+
+        if (
+          Object.keys(formattedStages).length > 0 &&
+          statAttributeData.attributeData.length > 0
+        ) {
+          initializeDefaultFilters(
+            formattedStages,
+            statAttributeData.attributeData
+          );
+        }
       } catch (err: any) {
-        console.error(err);
+        console.error("Error fetching data:", err);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchAll();
   }, []);
 
+  // Helper function to initialize default filters
+  const initializeDefaultFilters = (
+    stages: Record<string, string[]>,
+    attributes: { attribute_name: string }[]
+  ) => {
+    const levelNames = Object.keys(stages);
+    if (levelNames.length === 0 || attributes.length === 0) return;
+
+    const selectedLevel = levelNames[0];
+    const initialAttributes: Record<string, number> = {};
+    const initialStages: Record<string, number> = {};
+
+    attributes.forEach((stat) => {
+      initialAttributes[stat.attribute_name] = 100;
+    });
+
+    stages[selectedLevel].forEach((stage) => {
+      initialStages[stage] = 100;
+    });
+
+    const today = new Date();
+    const start = new Date(today);
+    start.setDate(today.getDate() - 7);
+
+    setFilters({
+      selectedLevel: selectedLevel,
+      startDate: start,
+      endDate: today,
+      selectedFilter: attributes[0]?.attribute_name || "",
+      attributeInputs: initialAttributes,
+      stageInputs: initialStages,
+    });
+  };
+
   return (
     <SharedDataContext.Provider
-      value={{ formattedStages, groups, statAttributes }}
+      value={{
+        formattedStages,
+        groups,
+        statAttributes,
+        filters,
+        setFilters,
+        isLoading,
+      }}
     >
       {children}
     </SharedDataContext.Provider>
