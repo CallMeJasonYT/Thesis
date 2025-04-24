@@ -83,7 +83,7 @@ const Navbar = (): ReactElement => {
                 className={cn(
                   "px-2 sm:px-2.5 md:px-3 py-1.5",
                   "flex gap-1.5 sm:gap-2.5 items-center font-semibold rounded-xl transition-all transform-gpu",
-                  "bg-zinc-700/30 text-white hover:text-primary"
+                  "bg-zinc-700/50 text-white hover:text-primary"
                 )}
                 href={link.href}
                 draggable={false}

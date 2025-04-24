@@ -4,6 +4,8 @@ import { Suspense, type ReactElement, type ReactNode } from "react";
 import { Montserrat } from "next/font/google";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
+import BackgroundPattern from "@/components/bg-pattern";
+import VignetteBackground from "@/components/vignette-bg";
 import { cn } from "@/utils/classnameMerge";
 import { WebSocketProvider } from "@/contexts/WebSocketContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
@@ -37,15 +39,25 @@ const RootLayout = ({
         montserrat.className
       )}
     >
-      <div className="flex flex-col min-h-screen">
+      {/* Background Elements */}
+      <VignetteBackground />
+      <BackgroundPattern />
+
+      <div className="flex flex-col min-h-screen relative z-10">
         <WebSocketProvider>
           <NotificationProvider>
             <SharedDataProvider>
               <TooltipProvider>
                 <Navbar />
                 <main className="flex-grow">
-                  <Suspense fallback={<div>Loading...</div>}>
-                    <div className="mx-auto max-w-screen-3xl relative">
+                  <Suspense
+                    fallback={
+                      <div className="flex h-full items-center justify-center">
+                        Loading...
+                      </div>
+                    }
+                  >
+                    <div className="mx-auto max-w-screen-3xl relative px-4">
                       {children}
                     </div>
                   </Suspense>

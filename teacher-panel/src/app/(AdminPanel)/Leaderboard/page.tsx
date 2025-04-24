@@ -3,11 +3,18 @@ import RecordsTable from "@/components/RecordsTable";
 
 const Leaderboards = () => {
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-left">Leaderboards</h1>
+    <div className="container mx-auto p-8 md:py-12">
+      <header className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-left">
+          Leaderboard
+        </h1>
+        <p className="text-zinc-400 mt-2">Check who is leading the charts</p>
+      </header>
 
-      <FilterSearch />
-      <RecordsTable />
+      <div className="w-full">
+        <FilterSearch />
+        <RecordsTable />
+      </div>
     </div>
   );
 };

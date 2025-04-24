@@ -67,8 +67,8 @@ const OverviewStatsCards = () => {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="grid gap-1 md:gap-3 lg:gap-6 sm:grid-cols-2">
+    <div className="space-y-4 md:space-y-8">
+      <div className="grid gap-4 md:gap-3 lg:gap-6 sm:grid-cols-2">
         <StatsCard
           title="Player Status"
           stats={[
@@ -104,7 +104,7 @@ const OverviewStatsCards = () => {
         />
       </div>
 
-      <div className="grid gap-1 md:gap-3 lg:gap-6 sm:grid-cols-3">
+      <div className="grid gap-4 md:gap-3 lg:gap-6 sm:grid-cols-3">
         {levels.map((level: string) => (
           <StatsCard
             key={level}

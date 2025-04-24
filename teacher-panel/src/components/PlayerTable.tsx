@@ -73,8 +73,8 @@ const PlayerTable = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center">
-        <p className="mr-4">Select Group: </p>
+      <div className="flex flex-wrap gap-4 items-center">
+        <p>Select Group: </p>
         <select
           className="bg-neutral text-white border p-1 rounded-md "
           value={selectedGroup}
@@ -97,7 +97,7 @@ const PlayerTable = () => {
           )}
         </select>
         <button
-          className="ml-4 bg-primary text-white px-2 py-1 rounded-lg shadow-lg hover:bg-tertiary transition-all"
+          className="bg-primary text-white px-2 py-1 rounded-lg shadow-lg hover:bg-tertiary transition-all"
           onClick={handleGroupStatsButton}
         >
           Show Group Stats

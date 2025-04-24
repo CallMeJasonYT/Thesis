@@ -154,7 +154,7 @@ const FilterSearch = () => {
           isOpen
             ? "scale-y-100 opacity-100 p-8 max-h-[2000px]"
             : "scale-y-0 opacity-0 max-h-0 p-0"
-        } bg-zinc-800 rounded-lg mt-2 shadow-lg`}
+        } bg-muted rounded-lg mt-2 shadow-lg`}
       >
         <div className="flex flex-col gap-4 sm:gap-0 h-full">
           <div className="flex flex-col gap-4 sm:flex-row sm:justify-between">

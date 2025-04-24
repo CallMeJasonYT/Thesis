@@ -9,8 +9,6 @@ export { default as PlayersEntered } from "./playersEntered";
 export { default as CompletedIcon } from "./completedIcon";
 export { default as StopwatchIcon } from "./stopwatchIcon";
 export { default as NotificationIcon } from "./notificationIcon";
-export { default as XIcon } from "./xIcon";
-export { default as BurgerIcon } from "./burgerIcon";
 export { default as ArrowIcon } from "./arrowIcon";
 export { default as ChartIcon } from "./chartIcon";
 export { default as FiltersIcon } from "./filtersIcon";
