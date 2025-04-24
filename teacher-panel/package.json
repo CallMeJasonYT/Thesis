@@ -9,13 +9,19 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@radix-ui/react-tooltip": "^1.2.4",
+    "@tabler/icons-react": "^3.31.0",
+    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "lucide-react": "^0.503.0",
+    "motion": "^12.9.0",
     "next": "^15.2.3",
     "react": "^19.0.0",
     "react-datepicker": "^8.2.0",
     "react-dom": "^19.0.0",
     "recharts": "^2.15.1",
-    "tailwind-merge": "^3.0.1"
+    "tailwind-merge": "^3.2.0",
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
