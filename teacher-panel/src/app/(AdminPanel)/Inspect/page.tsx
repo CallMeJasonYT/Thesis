@@ -55,7 +55,7 @@ const InspectPage = () => {
               💡 Enter a hint message:
             </label>
             <textarea
-              className="w-full p-3 rounded-lg focus:ring-2 text-black focus:ring-primary focus:outline-none transition-all"
+              className="w-full p-3 rounded-lg focus:ring-2 text-black focus:ring-primary focus:outline-hidden transition-all"
               placeholder="Type a hint message for the player..."
               value={hint}
               onChange={(e) => setHint(e.target.value)}

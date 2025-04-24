@@ -1,10 +1,10 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { NotificationIcon, XIcon } from "@/icons";
 import Notification from "./Notification";
 import { useWebSocket } from "@/contexts/WebSocketContext";
 import { useNotification } from "@/contexts/NotificationContext";
+import { IconBellExclamation, IconX } from "@tabler/icons-react";
 
 const NotificationSlider = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -84,14 +84,13 @@ const NotificationSlider = () => {
   ]);
 
   return (
-    <div className="max-h-[24px] xl:max-h-[32px]">
-      <button onClick={toggleSidebar}>
-        <NotificationIcon
-          className={`w-6 xl:w-8 transition-all ${
-            hasNotifications ? "animate-bell text-red-500" : "text-white"
-          }`}
-        />
-      </button>
+    <div>
+      <IconBellExclamation
+        onClick={toggleSidebar}
+        className={`w-7 xl:w-8 transition-all cursor-pointer ${
+          hasNotifications ? "animate-bell text-red-500" : "text-white"
+        }`}
+      />
 
       <div
         className={`fixed inset-0 bg-dark transition-opacity ${
@@ -101,7 +100,7 @@ const NotificationSlider = () => {
       ></div>
 
       <div
-        className={`fixed left-0 top-0 w-full sm:w-96 md:w-[400px] lg:w-[500px] xl:w-[700px] z-[15] h-full bg-zinc-950 transition-all transform ${
+        className={`fixed left-0 top-0 w-full sm:w-96 md:w-[400px] lg:w-[500px] xl:w-[700px] z-15 h-full bg-zinc-950 transition-all transform ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -109,7 +108,7 @@ const NotificationSlider = () => {
           <div className="flex justify-between">
             <h3 className="font-semibold text-xl">Notifications</h3>
             <button onClick={toggleSidebar}>
-              <XIcon className="text-white w-6 h-6" />
+              <IconX className="text-white cursor-pointer" />
             </button>
           </div>
 

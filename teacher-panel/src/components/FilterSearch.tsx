@@ -170,7 +170,7 @@ const FilterSearch = () => {
                 id="level-select"
                 value={selectedLevel}
                 onChange={(e) => setSelectedLevel(e.target.value)}
-                className="px-2 py-1 rounded border bg-neutral text-white focus:outline-none"
+                className="px-2 py-1 rounded border bg-neutral text-white focus:outline-hidden"
               >
                 {Object.keys(formattedStages).map((levelName) => (
                   <option
