@@ -8,6 +8,7 @@ import { cn } from "@/utils/classnameMerge";
 import { WebSocketProvider } from "@/contexts/WebSocketContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { SharedDataProvider } from "@/contexts/SharedDataContext";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export const metadata: Metadata = {
   title: "Admin Panel",
@@ -16,6 +17,7 @@ export const metadata: Metadata = {
     images: [{ url: "/images/admin.png", width: 128, height: 128 }],
   },
 };
+
 export const viewport: Viewport = { themeColor: "#64F4E0" };
 
 const montserrat = Montserrat({
@@ -25,27 +27,31 @@ const montserrat = Montserrat({
 
 const RootLayout = ({
   children,
-}: Readonly<{ children: ReactNode }>): ReactElement => (
-  <html
-    suppressHydrationWarning
-    lang="en"
-    className={cn(
-      `${montserrat.className} scroll-smooth antialiased select-none`
-    )}
-  >
+}: Readonly<{
+  children: ReactNode;
+}>) => (
+  <html lang="en" suppressHydrationWarning>
     <body
       className={cn(
         "antialiased scroll-smooth select-none",
         montserrat.className
       )}
     >
-      <div className="min-h-screen px-7 pb-5 max-w-xl mx-auto flex flex-col gap-5">
+      <div className="flex flex-col min-h-screen">
         <WebSocketProvider>
           <NotificationProvider>
             <SharedDataProvider>
-              <Navbar />
-              <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
-              <Footer />
+              <TooltipProvider>
+                <Navbar />
+                <main className="flex-grow">
+                  <Suspense fallback={<div>Loading...</div>}>
+                    <div className="mx-auto max-w-screen-3xl relative">
+                      {children}
+                    </div>
+                  </Suspense>
+                </main>
+                <Footer />
+              </TooltipProvider>
             </SharedDataProvider>
           </NotificationProvider>
         </WebSocketProvider>

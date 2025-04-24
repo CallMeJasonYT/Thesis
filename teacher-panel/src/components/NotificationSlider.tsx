@@ -84,7 +84,7 @@ const NotificationSlider = () => {
   ]);
 
   return (
-    <div>
+    <div className="p-1">
       <IconBellExclamation
         onClick={toggleSidebar}
         className={`w-7 xl:w-8 transition-all cursor-pointer ${
