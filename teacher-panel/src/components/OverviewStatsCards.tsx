@@ -5,14 +5,14 @@ import StatsCard from "@/components/StatsCard";
 import { useWebSocket } from "@/contexts/WebSocketContext";
 import { useSharedData } from "@/contexts/SharedDataContext";
 import {
-  CompletedIcon,
-  OnlineIcon,
-  PlayersEntered,
-  RoomsOpen,
-  RoomsTotal,
-  StopwatchIcon,
-  UsersIcon,
-} from "@/icons";
+  IconCheck,
+  IconWifi,
+  IconUser,
+  IconLogin2,
+  IconDeviceGamepad2,
+  IconStopwatch,
+  IconBolt,
+} from "@tabler/icons-react";
 
 const OverviewStatsCards = () => {
   const { formattedStages } = useSharedData();
@@ -75,12 +75,12 @@ const OverviewStatsCards = () => {
             {
               label: "Total Players",
               value: stats.totalPlayers,
-              icon: <UsersIcon className="text-secondary" />,
+              icon: <IconUser className="text-secondary" />,
             },
             {
               label: "Online Players",
               value: onlinePlayers,
-              icon: <OnlineIcon className="text-emerald-800" />,
+              icon: <IconWifi className="text-emerald-800" />,
             },
           ]}
           colorClass="text-primary"
@@ -92,12 +92,12 @@ const OverviewStatsCards = () => {
             {
               label: "Total Games",
               value: stats.totalRooms,
-              icon: <RoomsTotal className="text-secondary" />,
+              icon: <IconDeviceGamepad2 className="text-secondary" />,
             },
             {
               label: "Active Games",
               value: activeRooms,
-              icon: <RoomsOpen className="text-emerald-800" />,
+              icon: <IconBolt className="text-emerald-800" />,
             },
           ]}
           colorClass="text-primary"
@@ -116,7 +116,7 @@ const OverviewStatsCards = () => {
                   stats?.roomStats.find(
                     (stat: any) => stat.level_name === level
                   )?.total_players ?? "N/A",
-                icon: <PlayersEntered className="text-tertiary" />,
+                icon: <IconLogin2 className="text-tertiary" />,
               },
               {
                 label: "Completion Rate",
@@ -125,7 +125,7 @@ const OverviewStatsCards = () => {
                     (stat: any) => stat.level_name === level
                   )?.completion_rate ?? "N/A"
                 }%`,
-                icon: <CompletedIcon className="text-primary" />,
+                icon: <IconCheck className="text-primary" />,
               },
               {
                 label: "Average Completion Time (s)",
@@ -133,7 +133,7 @@ const OverviewStatsCards = () => {
                   stats?.roomStats.find(
                     (stat: any) => stat.level_name === level
                   )?.avg_time ?? "N/A",
-                icon: <StopwatchIcon className="text-secondary" />,
+                icon: <IconStopwatch className="text-secondary" />,
               },
             ]}
             colorClass="text-secondary"

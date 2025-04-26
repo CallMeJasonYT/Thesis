@@ -15,7 +15,7 @@
   --color-tertiary: var(--tertiary);
   --color-quaternary: var(--color-quaternary);
   --color-neutral: var(--neutral);
-  --color-light: var(--color-light);
+  --color-light: var(--light);
 
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
@@ -66,6 +66,7 @@
   --neutral: oklch(0.27 0.0055 286.03 / 41.96%);
   --muted: oklch(0.21 0.0055 286.03);
   --muted-foreground: 240 3.8% 46.1%;
+  --light: oklch(0.43 0.005 285.823);
   --accent: 240 4.8% 95.9%;
   --accent-foreground: 240 5.9% 10%;
   --destructive: 0 84.2% 60.2%;

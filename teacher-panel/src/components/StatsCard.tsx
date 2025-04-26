@@ -14,11 +14,9 @@ const StatsCard: React.FC<StatsCardProps> = ({ title, stats, colorClass }) => {
       </h2>
       <div className="mt-4 space-y-2 sm:text-sm lg:text-lg text-md">
         {stats.map((stat, index) => (
-          <p key={index} className="flex items-center gap-2">
-            {stat.icon && (
-              <span className="size-5 text-gray-500">{stat.icon}</span>
-            )}
-            <strong>{stat.label}:</strong> {stat.value}
+          <p key={index} className="flex items-center gap-2 font-medium">
+            {stat.icon}
+            {stat.label}: {stat.value}
           </p>
         ))}
       </div>

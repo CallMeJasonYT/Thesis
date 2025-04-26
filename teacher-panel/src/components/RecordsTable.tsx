@@ -70,7 +70,7 @@ const RecordsTable: React.FC<{ top?: number }> = ({ top }) => {
 
   return (
     <div className="space-y-4">
-      <div className="border border-light shadow-lg rounded-xl">
+      <div className="border shadow-lg rounded-xl">
         <div className="max-h-96 overflow-y-auto">
           <Table className="w-full">
             <TableHeader>

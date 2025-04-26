@@ -131,9 +131,9 @@ const StatsPage = () => {
 
     return (
       <div className="custom-tooltip bg-zinc-800 p-3 rounded-md">
-        <p className="text-cyan-400 font-semibold">Date: {data.date}</p>
-        <p className="text-white">User: {data.username}</p>
-        <p className="text-white">
+        <p className="text-primary font-semibold">Date: {data.date}</p>
+        <p className="text-secondary">User: {data.username}</p>
+        <p className="text-secondary">
           {selectedStat}: {data.realValue}{" "}
         </p>
       </div>
@@ -219,7 +219,7 @@ const StatsPage = () => {
           startDate={startDate}
           endDate={endDate}
           dateFormat="yyyy-MM-dd"
-          className="p-1 border rounded-md bg-neutral"
+          className="p-1 border rounded-md bg-neutral text-center w-[150px]"
         />
         <span className="font-bold">to</span>
         <DatePicker
@@ -230,7 +230,7 @@ const StatsPage = () => {
           endDate={endDate}
           minDate={startDate}
           dateFormat="yyyy-MM-dd"
-          className="p-1 border rounded-md bg-neutral"
+          className="p-1 border rounded-md bg-neutral text-center w-[150px]"
         />
       </div>
 

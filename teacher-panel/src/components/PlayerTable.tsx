@@ -9,7 +9,7 @@ import {
   TableHead,
   TableCell,
 } from "./Table";
-import { ChartIcon } from "@/icons";
+import { IconDeviceDesktopAnalytics } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 
 interface User {
@@ -97,14 +97,14 @@ const PlayerTable = () => {
           )}
         </select>
         <button
-          className="bg-primary text-white px-2 py-1 rounded-lg shadow-lg hover:bg-tertiary transition-all"
+          className="bg-primary text-white px-2 py-1 rounded-lg shadow-lg hover:bg-tertiary cursor-pointer transition-all"
           onClick={handleGroupStatsButton}
         >
           Show Group Stats
         </button>
       </div>
 
-      <div className="border border-light shadow-lg rounded-xl">
+      <div className="border shadow-lg rounded-xl">
         <Table className="w-full overflow-x-auto">
           <TableHeader>
             <TableRow className="bg-neutral border-muted">
@@ -116,13 +116,13 @@ const PlayerTable = () => {
           <TableBody>
             {selectedGroupUsers.length > 0 ? (
               selectedGroupUsers.map((user, index) => (
-                <TableRow key={index} className="border-muted hover:bg-light">
+                <TableRow key={index} className="border-muted hover:bg-neutral">
                   <TableCell className="text-center">{user.Username}</TableCell>
                   <TableCell className="text-center">
                     {user.lastPlayed}
                   </TableCell>
                   <TableCell className="flex justify-end">
-                    <ChartIcon
+                    <IconDeviceDesktopAnalytics
                       className="mr-5 w-6 h-6 text-secondary cursor-pointer"
                       onClick={() => handleStatsButton(user.Username)}
                     />

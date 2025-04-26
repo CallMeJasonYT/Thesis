@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { RadioGroup } from "./RadioGroup";
 import { RadioButton } from "./RadioButton";
-import { CircleQuestionIcon, FiltersIcon } from "@/icons";
+import { IconFilter, IconHelp, IconFilterCheck } from "@tabler/icons-react";
 import { useSharedData } from "@/contexts/SharedDataContext";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -58,6 +58,7 @@ const FilterSearch = () => {
       attributeInputs,
       stageInputs,
     });
+    setIsOpen(false);
   };
 
   // Return loading state or placeholder if data isn't ready
@@ -66,9 +67,9 @@ const FilterSearch = () => {
       <div className="relative mt-2 mb-2">
         <button
           disabled
-          className="flex items-center gap-1 bg-gray-500 text-white px-3 py-1 rounded-lg font-bold cursor-not-allowed"
+          className="flex items-center gap-1 bg-gray-500 text-white px-3 py-1 rounded-lg font-semibold cursor-not-allowed"
         >
-          <FiltersIcon className="size-5" />
+          <IconFilter className="size-5" />
           Loading Filters...
         </button>
       </div>
@@ -81,9 +82,9 @@ const FilterSearch = () => {
       <div className="relative mt-2 mb-2">
         <button
           disabled
-          className="flex items-center gap-1 bg-gray-500 text-white px-3 py-1 rounded-lg font-bold cursor-not-allowed"
+          className="flex items-center gap-1 bg-gray-500 text-white px-3 py-1 rounded-lg font-semibold cursor-not-allowed"
         >
-          <FiltersIcon className="size-5" />
+          <IconFilter className="size-5" />
           No Filter Data Available
         </button>
       </div>
@@ -143,9 +144,9 @@ const FilterSearch = () => {
     <div className="relative mt-2 mb-2">
       <button
         onClick={() => setIsOpen((prev) => !prev)}
-        className="flex items-center gap-1 bg-primary text-white px-3 py-1 rounded-lg font-bold hover:bg-tertiary transition"
+        className="flex items-center gap-1 bg-primary text-white px-3 py-1 rounded-lg font-semibold hover:bg-tertiary cursor-pointer transition"
       >
-        <FiltersIcon className="size-5" />
+        <IconFilter className="size-5" />
         {isOpen ? "Hide Filters" : "Filters"}
       </button>
 
@@ -204,7 +205,7 @@ const FilterSearch = () => {
                       label={stat.attribute_name}
                     />
                     <div className="relative group">
-                      <CircleQuestionIcon className="size-4 text-slate-400" />
+                      <IconHelp className="size-4 text-slate-400" />
                       <div className="absolute top-auto bottom-full -translate-x-1/4 mb-2 sm:top-1/2 sm:bottom-auto sm:left-full sm:translate-x-2 sm:-translate-y-1/2 w-max px-2 py-1 text-sm text-white bg-gray-700 rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none max-w-[200px] lg:max-w-max z-10">
                         Records are sorted based on the{" "}
                         <b>{stat.attribute_name}</b> of the run
@@ -251,7 +252,7 @@ const FilterSearch = () => {
                   startDate={startDate}
                   endDate={endDate}
                   dateFormat="yyyy-MM-dd"
-                  className="p-1 border rounded-md bg-neutral max-w-[110px] text-white"
+                  className="p-1 border rounded-md bg-neutral text-center w-[150px]"
                 />
                 <span className="font-bold text-white">to</span>
                 <DatePicker
@@ -262,7 +263,7 @@ const FilterSearch = () => {
                   endDate={endDate}
                   minDate={startDate}
                   dateFormat="yyyy-MM-dd"
-                  className="p-1 border rounded-md bg-neutral max-w-[110px] text-white"
+                  className="p-1 border rounded-md bg-neutral text-center w-[150px]"
                 />
               </div>
             </div>
@@ -271,10 +272,11 @@ const FilterSearch = () => {
           {/* Button */}
           <div className="flex justify-center sm:self-end">
             <button
-              className="w-full bg-primary text-white px-4 py-2 rounded-lg shadow-lg 
-            hover:bg-tertiary transition-all"
+              className="w-full bg-primary font-semibold flex items-center justify-center gap-2 text-white px-4 py-1 rounded-lg shadow-lg 
+            hover:bg-tertiary cursor-pointer transition-all"
               onClick={handleApplyFiltersButton}
             >
+              {<IconFilterCheck className="size-5" />}
               Apply Filters
             </button>
           </div>
