@@ -12,9 +12,6 @@ services:
     build:
       context: ./websocket-server
       dockerfile: Dockerfile
-    volumes:
-      - ./websocket-server:/app
-      - /app/node_modules
     ports:
       - "80:80"
     environment:

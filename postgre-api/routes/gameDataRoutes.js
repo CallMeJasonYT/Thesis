@@ -5,7 +5,7 @@ import {
   saveLevelCompletion,
 } from "../controllers/gameDataController.js";
 
-router.get("/api/game/validatePlayer", validatePlayer);
-router.get("/api/game/saveLevelCompletion", saveLevelCompletion);
+router.post("/api/game/validatePlayer", validatePlayer);
+router.post("/api/game/saveLevelCompletion", saveLevelCompletion);
 
 export default router;

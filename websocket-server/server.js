@@ -1,4 +1,9 @@
 const WebSocket = require("ws");
+const axios = require("axios");
+require("dotenv").config();
+
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 
 const wss = new WebSocket.Server({
   port: 80,
@@ -66,6 +71,7 @@ function handleMessage(ws, data) {
           ws.send(JSON.stringify(notification));
         });
       }
+      break;
     case "active-rooms":
       assignRoom(ws, data.room, data.uuid);
       break;
@@ -76,12 +82,99 @@ function handleMessage(ws, data) {
       forwardScreenshot(data);
       break;
     case "StageTimeNotification":
-      forwardStageTime(data);
+      enhanceNotificationWithGemini(data)
+        .then((enhancedData) => {
+          forwardStageTime(enhancedData);
+        })
+        .catch((error) => {
+          console.error("Error enhancing notification with Gemini:", error);
+          // Fallback to original notification if enhancement fails
+          forwardStageTime(data);
+        });
       break;
     case "DismissNotification":
       eraseNotification(data);
+      break;
     case "SendHint":
       forwardHint(data);
+      break;
+  }
+}
+
+// Function to enhance notification with Gemini
+async function enhanceNotificationWithGemini(data) {
+  try {
+    // Add a random seed to make each prompt slightly different
+    const randomSeed = Math.floor(Math.random() * 1000);
+
+    const prompt = `
+You are a fun and engaging game assistant that provides custom notifications for players who are taking too long on game levels to a teacher panel. 
+The game is about an Escape Room that you need to solve puzzles that require computer sorting algorithms in order to get out.
+
+Player: ${data.username}
+Game Level: ${data.room}
+Current Stage: ${data.stage}
+Time Spent: ${data.time} seconds
+Random Seed: ${randomSeed}
+
+Write a short (max 2 sentences), slightly humorous message with emojis If you wish, in order to display this to the teacher. Note that
+the fact that the notification is coming to the teacher means that the player is taking a long time to complete this stage.
+Make it personalized and include specific details about their current stage and level. Make sure you pinpoint the time and give a friendly 
+advice to the teacher about his next steps. Please be as random as possible in your responses.
+
+Requirements:
+- Every Message has to be different than the previous one
+- Do NOT include any quotation marks in your response
+
+Reply with ONLY the notification message text.
+`;
+
+    const response = await axios.post(
+      `${GEMINI_BASE_URL}/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        contents: [
+          {
+            parts: [{ text: prompt }],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.95,
+          maxOutputTokens: 150,
+          topP: 0.95,
+          topK: 40,
+        },
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    // Get the generated text from the response
+    let generatedMessage = response.data.candidates[0].content.parts[0].text;
+
+    // More thorough cleanup of quotation marks
+    generatedMessage = generatedMessage
+      .replace(/^["']|["']$/g, "") // Remove leading/trailing quotes
+      .replace(/["]/g, "") // Remove all double quotes
+      .replace(/[']/g, "'") // Replace fancy single quotes with regular ones
+      .trim();
+
+    const enhancedData = { ...data };
+    enhancedData.enhancedMessage = generatedMessage;
+
+    console.log(
+      `Enhanced notification for ${data.username}: ${generatedMessage}`
+    );
+
+    return enhancedData;
+  } catch (error) {
+    console.error(
+      "Error calling Gemini API:",
+      error.response?.data || error.message
+    );
+    return data;
   }
 }
 
@@ -153,11 +246,17 @@ function forwardStageTime(data) {
     console.log(`Old notification for ${data.username} removed.`);
   }
 
-  notifications.push(data);
+  const notificationToSend = { ...data };
+
+  if (notificationToSend.enhancedMessage) {
+    notificationToSend.message = notificationToSend.enhancedMessage;
+  }
+
+  notifications.push(notificationToSend);
 
   if (webPanel && webPanel.readyState === WebSocket.OPEN) {
     console.log("Forwarding Stage Notification to Web Panel.");
-    webPanel.send(JSON.stringify(data));
+    webPanel.send(JSON.stringify(notificationToSend));
   } else {
     console.log("Web Panel is not connected.");
   }

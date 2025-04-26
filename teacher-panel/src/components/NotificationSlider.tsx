@@ -15,7 +15,7 @@ const NotificationSlider = () => {
   const router = useRouter();
   const hasNotifications = notifications.length > 0;
 
-  const hasFetchedNotifications = useRef(false); // Prevent multiple requests
+  const hasFetchedNotifications = useRef(false);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -32,23 +32,28 @@ const NotificationSlider = () => {
   };
 
   const handleStageTimeNotification = useCallback(
-    (data: { username: string; room: string; stage: string; time: string }) => {
-      const message = `⚠️ ${data.username} has been stuck in ${data.room}, stage ${data.stage}, for ${data.time} seconds!`;
-      addNotification({ username: data.username, message });
+    (data: any) => {
+      const notificationMessage =
+        data.enhancedMessage ||
+        data.message ||
+        `⚠️ ${data.username} has been stuck in ${data.room}, stage ${data.stage}, for ${data.time} seconds!`;
+
+      addNotification({
+        username: data.username,
+        message: notificationMessage,
+      });
     },
     [addNotification]
   );
 
   const handleStoredNotifications = useCallback(
-    (data: { notifications: any[] }) => {
-      const storedMessages = data.notifications.map((notif) => ({
-        username: notif.username,
-        message: `⚠️ ${notif.username} has been stuck in ${notif.room}, stage ${notif.stage}, for ${notif.time} seconds!`,
-      }));
-
-      storedMessages.forEach(addNotification);
+    (notifications: any[]) => {
+      notifications.forEach((notification) => {
+        // For each stored notification, process it like a new notification
+        handleStageTimeNotification(notification);
+      });
     },
-    [addNotification]
+    [handleStageTimeNotification]
   );
 
   const handleRemoveUserNotifications = useCallback(
