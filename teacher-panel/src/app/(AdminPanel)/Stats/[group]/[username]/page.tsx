@@ -23,7 +23,7 @@ interface StatsEntry {
   };
 }
 
-const StatsPage = () => {
+const UserStatsPage = () => {
   const { statAttributes, formattedStages } = useSharedData();
 
   useEffect(() => {
@@ -123,8 +123,6 @@ const StatsPage = () => {
       });
   }, [statsData, selectedRoom, selectedStat]);
 
-  console.log(filteredData);
-
   const CustomTooltip = ({ active, payload }: any) => {
     if (!active || !payload || payload.length === 0) return null;
     const data = payload[0].payload;
@@ -141,136 +139,151 @@ const StatsPage = () => {
   };
 
   return (
-    <div className="p-6 bg-neutral rounded-lg shadow-md w-full mx-auto">
-      <h2 className="text-xl font-bold mb-4">Level Stats</h2>
+    <div className="container mx-auto p-8 md:py-12">
+      <header className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-left">
+          Player Statistics
+        </h1>
+        <p className="text-zinc-400 mt-2">
+          Monitor statistics for the selected player
+        </p>
+      </header>
 
-      <div className="flex flex-wrap items-center gap-4 mb-6">
-        {/* Level Selector */}
-        <div className="flex flex-col sm:flex-row gap-2 items-center">
-          <label className="font-bold">Select Level:</label>
-          <select
-            className="bg-neutral text-white border p-1 rounded-md"
-            value={selectedRoom}
-            onChange={(e) => {
-              const newLevel = e.target.value;
-              setSelectedRoom(newLevel);
-            }}
-          >
-            {Object.keys(formattedStages).map((levelName) => (
-              <option key={levelName} value={levelName} className="bg-gray-800">
-                {levelName}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="p-6 bg-neutral rounded-lg shadow-md w-full mx-auto">
+        <h2 className="text-xl font-bold mb-4">Level Stats for {user}</h2>
 
-        {/* Stage Selector */}
-        <div className="flex flex-col sm:flex-row gap-2 items-center">
-          <label className="font-bold">Select Stage:</label>
-          <select
-            className="bg-neutral text-white border p-1 rounded-md"
-            value={selectedStage}
-            onChange={(e) => setSelectedStage(e.target.value)}
-          >
-            <option value="Overall" className="bg-gray-800">
-              Overall
-            </option>
-            {formattedStages[selectedRoom]
-              ?.filter((stageName) => stageName !== "Overall")
-              .map((stageName) => (
+        <div className="flex flex-wrap items-center gap-4 mb-6">
+          {/* Level Selector */}
+          <div className="flex flex-col sm:flex-row gap-2 items-center">
+            <label className="font-bold">Select Level:</label>
+            <select
+              className="bg-neutral text-white border p-1 rounded-md"
+              value={selectedRoom}
+              onChange={(e) => {
+                const newLevel = e.target.value;
+                setSelectedRoom(newLevel);
+              }}
+            >
+              {Object.keys(formattedStages).map((levelName) => (
                 <option
-                  key={stageName}
-                  value={stageName}
+                  key={levelName}
+                  value={levelName}
                   className="bg-gray-800"
                 >
-                  {stageName}
+                  {levelName}
                 </option>
               ))}
-          </select>
-        </div>
+            </select>
+          </div>
 
-        {/* Stat Selector */}
-        <div className="flex flex-col sm:flex-row gap-2 items-center">
-          <label className="font-bold">Select Stat:</label>
-          <select
-            className="bg-neutral text-white border p-1 rounded-md"
-            value={selectedStat}
-            onChange={(e) => setSelectedStat(e.target.value)}
-          >
-            {statAttributes.map((stat) => (
-              <option
-                key={stat.attribute_name}
-                value={stat.attribute_name}
-                className="bg-gray-800"
-              >
-                {stat.attribute_name}
+          {/* Stage Selector */}
+          <div className="flex flex-col sm:flex-row gap-2 items-center">
+            <label className="font-bold">Select Stage:</label>
+            <select
+              className="bg-neutral text-white border p-1 rounded-md"
+              value={selectedStage}
+              onChange={(e) => setSelectedStage(e.target.value)}
+            >
+              <option value="Overall" className="bg-gray-800">
+                Overall
               </option>
-            ))}
-          </select>
+              {formattedStages[selectedRoom]
+                ?.filter((stageName) => stageName !== "Overall")
+                .map((stageName) => (
+                  <option
+                    key={stageName}
+                    value={stageName}
+                    className="bg-gray-800"
+                  >
+                    {stageName}
+                  </option>
+                ))}
+            </select>
+          </div>
+
+          {/* Stat Selector */}
+          <div className="flex flex-col sm:flex-row gap-2 items-center">
+            <label className="font-bold">Select Stat:</label>
+            <select
+              className="bg-neutral text-white border p-1 rounded-md"
+              value={selectedStat}
+              onChange={(e) => setSelectedStat(e.target.value)}
+            >
+              {statAttributes.map((stat) => (
+                <option
+                  key={stat.attribute_name}
+                  value={stat.attribute_name}
+                  className="bg-gray-800"
+                >
+                  {stat.attribute_name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-      </div>
 
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        <p className="font-bold">Select Date Range:</p>
-        <DatePicker
-          selected={startDate}
-          onChange={(date) => date && setStartDate(date)}
-          selectsStart
-          startDate={startDate}
-          endDate={endDate}
-          dateFormat="yyyy-MM-dd"
-          className="p-1 border rounded-md bg-neutral"
-        />
-        <span className="font-bold">to</span>
-        <DatePicker
-          selected={endDate}
-          onChange={(date) => date && setEndDate(date)}
-          selectsEnd
-          startDate={startDate}
-          endDate={endDate}
-          minDate={startDate}
-          dateFormat="yyyy-MM-dd"
-          className="p-1 border rounded-md bg-neutral"
-        />
-      </div>
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <p className="font-bold">Select Date Range:</p>
+          <DatePicker
+            selected={startDate}
+            onChange={(date) => date && setStartDate(date)}
+            selectsStart
+            startDate={startDate}
+            endDate={endDate}
+            dateFormat="yyyy-MM-dd"
+            className="p-1 border rounded-md bg-neutral text-center w-[150px]"
+          />
+          <span className="font-bold">to</span>
+          <DatePicker
+            selected={endDate}
+            onChange={(date) => date && setEndDate(date)}
+            selectsEnd
+            startDate={startDate}
+            endDate={endDate}
+            minDate={startDate}
+            dateFormat="yyyy-MM-dd"
+            className="p-1 border rounded-md bg-neutral text-center w-[150px]"
+          />
+        </div>
 
-      <div className="w-full h-[400px] flex items-center justify-center">
-        {filteredData.length === 0 ? (
-          <p className="text-gray-400 text-lg font-semibold">
-            No data available for these filters.
-          </p>
-        ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <ScatterChart>
-              <CartesianGrid strokeDasharray="2 2" />
-              <XAxis
-                type="category"
-                dataKey="date"
-                tick={{ fill: "#EA8F7F", fontSize: 14 }}
-                allowDuplicatedCategory={false}
-              />
-              <YAxis
-                type="number"
-                dataKey="value"
-                tick={{ fill: "#EA8F7F", fontSize: 14 }}
-                label={{
-                  value: selectedStat,
-                  angle: -90,
-                  position: "insideLeft",
-                }}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Scatter
-                name={`User ${selectedStat}`}
-                data={filteredData}
-                fill="#0C9988"
-              />
-            </ScatterChart>
-          </ResponsiveContainer>
-        )}
+        <div className="w-full h-[400px] flex items-center justify-center">
+          {filteredData.length === 0 ? (
+            <p className="text-gray-400 text-lg font-semibold">
+              No data available for these filters.
+            </p>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <ScatterChart>
+                <CartesianGrid strokeDasharray="2 2" />
+                <XAxis
+                  type="category"
+                  dataKey="date"
+                  tick={{ fill: "#EA8F7F", fontSize: 14 }}
+                  allowDuplicatedCategory={false}
+                />
+                <YAxis
+                  type="number"
+                  dataKey="value"
+                  tick={{ fill: "#EA8F7F", fontSize: 14 }}
+                  label={{
+                    value: selectedStat,
+                    angle: -90,
+                    position: "insideLeft",
+                  }}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Scatter
+                  name={`User ${selectedStat}`}
+                  data={filteredData}
+                  fill="#0C9988"
+                />
+              </ScatterChart>
+            </ResponsiveContainer>
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
-export default StatsPage;
+export default UserStatsPage;
