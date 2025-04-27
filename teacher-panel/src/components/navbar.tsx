@@ -69,6 +69,7 @@ const Navbar = (): ReactElement => {
               alt="Thesis Logo"
               width={150}
               height={40}
+              style={{ width: "auto", height: "auto" }}
               draggable={false}
               className="rounded-lg xl:w-[200px]"
             />
