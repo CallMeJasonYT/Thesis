@@ -28,7 +28,7 @@ const NotificationSlider = () => {
 
   const handleInspect = (username: string) => {
     toggleSidebar();
-    router.push(`/Inspect?username=${username}`);
+    router.push(`/Inspect/${username}`);
   };
 
   const handleStageTimeNotification = useCallback(

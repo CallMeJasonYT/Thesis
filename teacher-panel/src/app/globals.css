@@ -63,7 +63,7 @@
   --secondary: oklch(0.74 0.1139 30.71);
   --secondary-foreground: 240 5.9% 10%;
   --tertiary: oklch(0.74 0.0308 63.99);
-  --neutral: oklch(0.27 0.0055 286.03 / 41.96%);
+  --neutral: oklch(0.27 0.0055 286.03 / 40%);
   --muted: oklch(0.21 0.0055 286.03);
   --muted-foreground: 240 3.8% 46.1%;
   --light: oklch(0.43 0.005 285.823);

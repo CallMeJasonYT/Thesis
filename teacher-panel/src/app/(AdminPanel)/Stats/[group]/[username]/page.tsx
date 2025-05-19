@@ -3,19 +3,29 @@ import { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { useSharedData } from "@/contexts/SharedDataContext";
 import DatePicker from "react-datepicker";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+
 import "react-datepicker/dist/react-datepicker.css";
 import {
-  ScatterChart,
-  Scatter,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Legend,
 } from "recharts";
 
 interface StatsEntry {
   room: string;
+  stage: string;
   date: string;
   username: string;
   attributes: {
@@ -23,21 +33,30 @@ interface StatsEntry {
   };
 }
 
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-muted p-3 rounded-lg border border-border shadow-lg">
+        <p className="text-white font-medium mb-1">{label}</p>
+        {payload.map((entry: any, index: number) => (
+          <p
+            key={`tooltip-${index}`}
+            style={{ color: entry.color }}
+            className="text-sm"
+          >
+            {entry.name}: {entry.value}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
 const UserStatsPage = () => {
   const { statAttributes, formattedStages } = useSharedData();
-
-  useEffect(() => {
-    const levelNames = Object.keys(formattedStages);
-    if (levelNames.length > 0) {
-      setSelectedRoom(levelNames[0]);
-    }
-    if (statAttributes.length > 0) {
-      setSelectedStat(statAttributes[0].attribute_name);
-    }
-  }, [formattedStages, statAttributes]);
-
-  const [selectedRoom, setSelectedRoom] = useState<string>("");
-  const [selectedStat, setSelectedStat] = useState<string>("");
+  const [selectedRoom, setSelectedRoom] = useState<string>("Overall");
+  const [selectedStat, setSelectedStat] = useState<string>("Overall");
   const [selectedStage, setSelectedStage] = useState<string>("Overall");
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [endDate, setEndDate] = useState<Date>(new Date());
@@ -84,10 +103,12 @@ const UserStatsPage = () => {
         (entry: {
           date: string;
           username: string;
+          stage_name: string;
           level_name: string;
           attributes: Record<string, string | number>;
         }) => ({
           room: entry.level_name,
+          stage: entry.stage_name,
           date: entry.date,
           username: entry.username,
           attributes: entry.attributes,
@@ -100,43 +121,77 @@ const UserStatsPage = () => {
     }
   };
 
-  const filteredData = useMemo(() => {
-    const grouped = new Map<string, number>();
+  const transformedData = useMemo(() => {
+    if (!statsData.length) return [];
 
-    return statsData
-      .filter((entry) => entry.room === selectedRoom)
-      .map((entry) => {
-        const value = entry.attributes[selectedStat] ?? 0;
-        const key = `${entry.date}-${value}`;
+    const grouped = new Map<string, any>();
 
-        const count = grouped.get(key) || 0;
-        grouped.set(key, count + 1);
+    const levels =
+      selectedRoom === "Overall"
+        ? Object.keys(formattedStages)
+        : [selectedRoom];
+    const statKeys =
+      selectedStat === "Overall"
+        ? statAttributes.map((s) => s.attribute_name)
+        : [selectedStat];
+    const stages =
+      selectedStage === "Overall"
+        ? selectedRoom === "Overall"
+          ? Array.from(new Set(Object.values(formattedStages).flat()))
+          : formattedStages[selectedRoom]
+        : [selectedStage];
 
-        const jitter = count * 0.05;
+    for (const entry of statsData) {
+      const { date, room, stage, attributes } = entry;
 
-        return {
-          date: entry.date,
-          username: entry.username,
-          value: value + jitter,
-          realValue: value,
-        };
+      if (!levels.includes(room)) continue;
+      if (!stages.includes(stage)) continue;
+
+      const key = `${date} ${room}`;
+      if (!grouped.has(key)) grouped.set(key, { date, level: room });
+
+      const current = grouped.get(key);
+
+      for (const stat of statKeys) {
+        const attrKey = `${stat} ${stage}`;
+
+        if (!current[attrKey]) current[attrKey] = [];
+        if (typeof attributes[stat] === "number") {
+          current[attrKey].push(attributes[stat]);
+        }
+      }
+    }
+
+    const result: any[] = [];
+
+    for (const [_, data] of grouped.entries()) {
+      const averaged: any = {
+        date: data.date,
+        level: data.level,
+        label: `${data.level} (${data.date})`,
+      };
+
+      Object.entries(data).forEach(([key, values]) => {
+        if (Array.isArray(values)) {
+          const sum = values.reduce((a, b) => a + b, 0);
+          averaged[key] = Math.round((sum / values.length) * 100) / 100;
+        }
       });
-  }, [statsData, selectedRoom, selectedStat]);
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (!active || !payload || payload.length === 0) return null;
-    const data = payload[0].payload;
+      result.push(averaged);
+    }
 
-    return (
-      <div className="custom-tooltip bg-zinc-800 p-3 rounded-md">
-        <p className="text-cyan-400 font-semibold">Date: {data.date}</p>
-        <p className="text-white">User: {data.username}</p>
-        <p className="text-white">
-          {selectedStat}: {data.realValue}{" "}
-        </p>
-      </div>
+    return result.sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
     );
-  };
+  }, [
+    statsData,
+    selectedRoom,
+    selectedStage,
+    selectedStat,
+    formattedStages,
+    statAttributes,
+  ]);
 
   return (
     <div className="container mx-auto p-8 md:py-12">
@@ -153,72 +208,61 @@ const UserStatsPage = () => {
         <h2 className="text-xl font-bold mb-4">Level Stats for {user}</h2>
 
         <div className="flex flex-wrap items-center gap-4 mb-6">
-          {/* Level Selector */}
           <div className="flex flex-col sm:flex-row gap-2 items-center">
             <label className="font-bold">Select Level:</label>
-            <select
-              className="bg-neutral text-white border p-1 rounded-md"
-              value={selectedRoom}
-              onChange={(e) => {
-                const newLevel = e.target.value;
-                setSelectedRoom(newLevel);
-              }}
-            >
-              {Object.keys(formattedStages).map((levelName) => (
-                <option
-                  key={levelName}
-                  value={levelName}
-                  className="bg-gray-800"
-                >
-                  {levelName}
-                </option>
-              ))}
-            </select>
+            <Select value={selectedRoom} onValueChange={setSelectedRoom}>
+              <SelectTrigger className="bg-neutral text-white border-border rounded-lg">
+                <SelectValue placeholder="Select Level" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 text-white">
+                <SelectItem value="Overall">Overall</SelectItem>
+                {Object.keys(formattedStages).map((levelName) => (
+                  <SelectItem key={levelName} value={levelName}>
+                    {levelName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Stage Selector */}
           <div className="flex flex-col sm:flex-row gap-2 items-center">
             <label className="font-bold">Select Stage:</label>
-            <select
-              className="bg-neutral text-white border p-1 rounded-md"
-              value={selectedStage}
-              onChange={(e) => setSelectedStage(e.target.value)}
-            >
-              <option value="Overall" className="bg-gray-800">
-                Overall
-              </option>
-              {formattedStages[selectedRoom]
-                ?.filter((stageName) => stageName !== "Overall")
-                .map((stageName) => (
-                  <option
-                    key={stageName}
-                    value={stageName}
-                    className="bg-gray-800"
-                  >
+            <Select value={selectedStage} onValueChange={setSelectedStage}>
+              <SelectTrigger className="bg-neutral text-white border-border rounded-lg">
+                <SelectValue placeholder="Select Stage" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 text-white">
+                <SelectItem value="Overall">Overall</SelectItem>
+                {(selectedRoom === "Overall"
+                  ? Array.from(new Set(Object.values(formattedStages).flat()))
+                  : formattedStages[selectedRoom] || []
+                ).map((stageName) => (
+                  <SelectItem key={stageName} value={stageName}>
                     {stageName}
-                  </option>
+                  </SelectItem>
                 ))}
-            </select>
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Stat Selector */}
           <div className="flex flex-col sm:flex-row gap-2 items-center">
             <label className="font-bold">Select Stat:</label>
-            <select
-              className="bg-neutral text-white border p-1 rounded-md"
-              value={selectedStat}
-              onChange={(e) => setSelectedStat(e.target.value)}
-            >
-              {statAttributes.map((stat) => (
-                <option
-                  key={stat.attribute_name}
-                  value={stat.attribute_name}
-                  className="bg-gray-800"
-                >
-                  {stat.attribute_name}
-                </option>
-              ))}
-            </select>
+            <Select value={selectedStat} onValueChange={setSelectedStat}>
+              <SelectTrigger className="bg-neutral text-white border-border rounded-lg">
+                <SelectValue placeholder="Select Stat" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 text-white">
+                <SelectItem value="Overall">Overall</SelectItem>
+                {statAttributes.map((stat) => (
+                  <SelectItem
+                    key={stat.attribute_name}
+                    value={stat.attribute_name}
+                  >
+                    {stat.attribute_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -246,38 +290,61 @@ const UserStatsPage = () => {
           />
         </div>
 
-        <div className="w-full h-[400px] flex items-center justify-center">
-          {filteredData.length === 0 ? (
+        <div className="w-full h-[350px] flex items-center justify-center">
+          {transformedData.length === 0 ? (
             <p className="text-gray-400 text-lg font-semibold">
               No data available for these filters.
             </p>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart>
-                <CartesianGrid strokeDasharray="2 2" />
-                <XAxis
-                  type="category"
-                  dataKey="date"
-                  tick={{ fill: "#EA8F7F", fontSize: 14 }}
-                  allowDuplicatedCategory={false}
+              <BarChart data={transformedData} barCategoryGap="30%">
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="label" type="category" />
+                <YAxis />
+                <Tooltip
+                  content={<CustomTooltip />}
+                  cursor={{ fill: "transparent" }}
                 />
-                <YAxis
-                  type="number"
-                  dataKey="value"
-                  tick={{ fill: "#EA8F7F", fontSize: 14 }}
-                  label={{
-                    value: selectedStat,
-                    angle: -90,
-                    position: "insideLeft",
-                  }}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Scatter
-                  name={`User ${selectedStat}`}
-                  data={filteredData}
-                  fill="#0C9988"
-                />
-              </ScatterChart>
+                <Legend />
+                {(() => {
+                  const stages =
+                    selectedStage === "Overall"
+                      ? selectedRoom === "Overall"
+                        ? Array.from(
+                            new Set(Object.values(formattedStages).flat())
+                          )
+                        : formattedStages[selectedRoom] || []
+                      : [selectedStage];
+
+                  const statKeys =
+                    selectedStat === "Overall"
+                      ? statAttributes.map((s) => s.attribute_name)
+                      : [selectedStat];
+
+                  const colors = [
+                    "#8884d8",
+                    "#82ca9d",
+                    "#ffc658",
+                    "#089887",
+                    "#f06c9b",
+                  ];
+
+                  return statKeys.flatMap((stat, sIdx) =>
+                    stages.map((stage, stgIdx) => (
+                      <Bar
+                        key={`${stat} ${stage}`}
+                        dataKey={`${stat} ${stage}`}
+                        stackId={selectedStat === "Overall" ? stat : "a"}
+                        fill={
+                          colors[
+                            (sIdx * stages.length + stgIdx) % colors.length
+                          ]
+                        }
+                      />
+                    ))
+                  );
+                })()}
+              </BarChart>
             </ResponsiveContainer>
           )}
         </div>
