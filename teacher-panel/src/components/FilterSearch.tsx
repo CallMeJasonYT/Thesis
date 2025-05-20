@@ -7,6 +7,13 @@ import { IconFilter, IconHelp, IconFilterCheck } from "@tabler/icons-react";
 import { useSharedData } from "@/contexts/SharedDataContext";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 const FilterSearch = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -161,28 +168,21 @@ const FilterSearch = () => {
           <div className="flex flex-col gap-4 sm:flex-row sm:justify-between">
             {/* Level Selection */}
             <div className="flex flex-col gap-2">
-              <label
-                htmlFor="level-select"
-                className="text-white font-semibold text-lg"
-              >
+              <label className="text-white font-semibold text-lg">
                 Select Level:
               </label>
-              <select
-                id="level-select"
-                value={selectedLevel}
-                onChange={(e) => setSelectedLevel(e.target.value)}
-                className="px-2 py-1 rounded border bg-neutral text-white focus:outline-hidden"
-              >
-                {Object.keys(formattedStages).map((levelName) => (
-                  <option
-                    key={levelName}
-                    value={levelName}
-                    className="bg-gray-800"
-                  >
-                    {levelName}
-                  </option>
-                ))}
-              </select>
+              <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+                <SelectTrigger className="bg-neutral text-white border-border rounded-2xl">
+                  <SelectValue placeholder={`Select Level:`} />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 text-white">
+                  {Object.keys(formattedStages).map((levelName) => (
+                    <SelectItem key={levelName} value={levelName}>
+                      {levelName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Sort & Advanced Filters */}
@@ -252,7 +252,7 @@ const FilterSearch = () => {
                   startDate={startDate}
                   endDate={endDate}
                   dateFormat="yyyy-MM-dd"
-                  className="p-1 border rounded-md bg-neutral text-center w-[150px]"
+                  className="p-1 border rounded-2xl bg-neutral text-center w-[150px]"
                 />
                 <span className="font-bold text-white">to</span>
                 <DatePicker
@@ -263,7 +263,7 @@ const FilterSearch = () => {
                   endDate={endDate}
                   minDate={startDate}
                   dateFormat="yyyy-MM-dd"
-                  className="p-1 border rounded-md bg-neutral text-center w-[150px]"
+                  className="p-1 border rounded-2xl bg-neutral text-center w-[150px]"
                 />
               </div>
             </div>

@@ -29,7 +29,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     const socket = new WebSocket(
-      `ws://${process.env.NEXT_PUBLIC_SERVERIP}`,
+      `ws://${process.env.NEXT_PUBLIC_SERVER_IP}`,
       "web-panel"
     );
 
@@ -52,7 +52,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
         () =>
           setWs(
             new WebSocket(
-              `ws://${process.env.NEXT_PUBLIC_SERVERIP}`,
+              `ws://${process.env.NEXT_PUBLIC_SERVER_IP}`,
               "web-panel"
             )
           ),

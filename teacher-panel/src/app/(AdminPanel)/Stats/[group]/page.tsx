@@ -63,7 +63,7 @@ const GroupStatsPage = () => {
   const fetchStatsData = async (startDate: Date, endDate: Date) => {
     try {
       const response = await fetch(
-        `http://${process.env.NEXT_PUBLIC_SERVERIP}:${process.env.NEXT_PUBLIC_APIPORT}/api/web/groupStats`,
+        `http://${process.env.NEXT_PUBLIC_SERVER_IP}:${process.env.NEXT_PUBLIC_DB_API_PORT}/api/web/groupStats`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

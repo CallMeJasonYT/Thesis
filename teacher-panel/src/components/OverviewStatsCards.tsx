@@ -27,7 +27,7 @@ const OverviewStatsCards = () => {
     const fetchStats = async () => {
       try {
         const response = await fetch(
-          `http://${process.env.NEXT_PUBLIC_SERVERIP}:${process.env.NEXT_PUBLIC_APIPORT}/api/web/overviewStats`
+          `http://${process.env.NEXT_PUBLIC_SERVER_IP}:${process.env.NEXT_PUBLIC_DB_API_PORT}/api/web/overviewStats`
         );
         const data = await response.json();
         console.log("Fetched Stats:", data);

@@ -30,7 +30,7 @@ const RecordsTable: React.FC<{ top?: number }> = ({ top }) => {
       setIsLoadingRecords(true);
       try {
         const response = await fetch(
-          `http://${process.env.NEXT_PUBLIC_SERVERIP}:${process.env.NEXT_PUBLIC_APIPORT}/api/web/getLeaderboardRecords`,
+          `http://${process.env.NEXT_PUBLIC_SERVER_IP}:${process.env.NEXT_PUBLIC_DB_API_PORT}/api/web/getLeaderboardRecords`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

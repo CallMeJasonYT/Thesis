@@ -16,6 +16,7 @@
   --color-quaternary: var(--color-quaternary);
   --color-neutral: var(--neutral);
   --color-light: var(--light);
+  --color-light-foreground: var(--light-foreground);
 
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
@@ -66,14 +67,15 @@
   --neutral: oklch(0.27 0.0055 286.03 / 40%);
   --muted: oklch(0.21 0.0055 286.03);
   --muted-foreground: 240 3.8% 46.1%;
-  --light: oklch(0.43 0.005 285.823);
-  --accent: 240 4.8% 95.9%;
-  --accent-foreground: 240 5.9% 10%;
+  --light: oklch(0.9674 0.0013 286.38);
+  --light-foreground: oklch(0.2103 0.0059 285.89);
+  --accent: oklch(0.9674 0.0013 286.38);
+  --accent-foreground: oklch(0.2103 0.0059 285.89);
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 0 0% 98%;
-  --border: oklch(0.4 0.0188 206.03);
+  --border: oklch(0.4585 0.0038 206.03);
   --input: 240 5.9% 90%;
-  --ring: 240 10% 3.9%;
+  --ring: oklch(0.1408 0.0044 285.82);
   --chart-1: 12 76% 61%;
   --chart-2: 173 58% 39%;
   --chart-3: 197 37% 24%;

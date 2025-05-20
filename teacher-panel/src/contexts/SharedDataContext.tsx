@@ -48,13 +48,13 @@ export const SharedDataProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         const [stageRes, groupRes, statAttrbutesRes] = await Promise.all([
           fetch(
-            `http://${process.env.NEXT_PUBLIC_SERVERIP}:${process.env.NEXT_PUBLIC_APIPORT}/api/web/levelStages`
+            `http://${process.env.NEXT_PUBLIC_SERVER_IP}:${process.env.NEXT_PUBLIC_DB_API_PORT}/api/web/levelStages`
           ),
           fetch(
-            `http://${process.env.NEXT_PUBLIC_SERVERIP}:${process.env.NEXT_PUBLIC_APIPORT}/api/web/groups`
+            `http://${process.env.NEXT_PUBLIC_SERVER_IP}:${process.env.NEXT_PUBLIC_DB_API_PORT}/api/web/groups`
           ),
           fetch(
-            `http://${process.env.NEXT_PUBLIC_SERVERIP}:${process.env.NEXT_PUBLIC_APIPORT}/api/web/statsAttributes`
+            `http://${process.env.NEXT_PUBLIC_SERVER_IP}:${process.env.NEXT_PUBLIC_DB_API_PORT}/api/web/statsAttributes`
           ),
         ]);
 

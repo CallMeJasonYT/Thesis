@@ -9,7 +9,7 @@ const Players = () => {
       </header>
 
       <div className="w-full">
-        <PlayerTable />
+        <PlayerTable itemsPerPage={5} />
       </div>
     </div>
   );
