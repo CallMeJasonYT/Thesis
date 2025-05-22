@@ -102,18 +102,16 @@ const PlayerTable: React.FC<PlayerTableProps> = ({ itemsPerPage = 10 }) => {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-4 items-center">
-        <label className="text-white font-semibold text-lg">
-          Select Group:
-        </label>
+        <label className=" font-semibold text-lg">Select Group:</label>
         <Select
           value={selectedGroup}
           onValueChange={setSelectedGroup}
           disabled={groups.length === 0}
         >
-          <SelectTrigger className="bg-neutral text-white border-border rounded-2xl">
+          <SelectTrigger className="bg-neutral  border-border rounded-2xl">
             <SelectValue placeholder={groups.length ? "" : "No Groups"} />
           </SelectTrigger>
-          <SelectContent className="bg-gray-800 text-white">
+          <SelectContent className="bg-gray-800 ">
             {groups.map((g) => (
               <SelectItem key={g.group_name} value={g.group_name}>
                 {`Group ${g.group_name}`}
@@ -124,7 +122,7 @@ const PlayerTable: React.FC<PlayerTableProps> = ({ itemsPerPage = 10 }) => {
         <Button onClick={handleGroupStats}>Show Group Stats</Button>
       </div>
 
-      <div className="border shadow-lg rounded-xl">
+      <div className="border shadow-lg rounded-2xl">
         <Table className="w-full overflow-x-auto">
           <TableHeader>
             <TableRow className="bg-neutral">

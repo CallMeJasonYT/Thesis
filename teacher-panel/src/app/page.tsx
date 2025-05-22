@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 const MainPage = async (): Promise<ReactElement> => {
   return (
@@ -12,9 +13,9 @@ const MainPage = async (): Promise<ReactElement> => {
           Manage players, monitor activities, and control the system
           efficiently.
         </p>
-        <button className="bg-primary text-white font-bold px-5 py-2 rounded-lg shadow-lg hover:bg-tertiary transition-all">
+        <Button className="bg-primary text-lg px-5 py-2 shadow-lg transition-all">
           <Link href="/Overview">Go to Overview</Link>
-        </button>
+        </Button>
       </div>
     </div>
   );

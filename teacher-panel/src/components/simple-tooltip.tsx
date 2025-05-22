@@ -21,7 +21,7 @@ const SimpleTooltip = ({
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>{children}</TooltipTrigger>
-        <TooltipContent className="bg-muted text-white" side={side}>
+        <TooltipContent className="bg-muted " side={side}>
           {content}
         </TooltipContent>
       </Tooltip>

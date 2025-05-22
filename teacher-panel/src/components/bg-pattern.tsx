@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
 import { ReactElement } from "react";
 import { GridPattern } from "@/components/ui/GridPattern";
 

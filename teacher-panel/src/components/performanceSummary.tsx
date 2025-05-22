@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchChatgptResponse } from "@/app/actions/fetchChatgptResponse";
 import { IconCheck, IconCopy, IconX } from "@tabler/icons-react";
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
 
 interface PerformanceEntry {
   room: string;
@@ -183,7 +183,7 @@ export const PerformanceSummary = ({
             <Skeleton className="h-6 w-4/6" />
           </div>
         ) : (
-          <div className="text-white whitespace-pre-wrap">{response}</div>
+          <div className="whitespace-pre-wrap">{response}</div>
         )}
       </div>
     </div>

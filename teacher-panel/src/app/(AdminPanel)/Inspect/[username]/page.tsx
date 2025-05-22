@@ -4,6 +4,8 @@ import { useRouter, useParams } from "next/navigation";
 import Screenshot from "@/components/Screenshot";
 import { useWebSocket } from "@/contexts/WebSocketContext";
 import { useNotification } from "@/contexts/NotificationContext";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
 
 const InspectPage = () => {
   const params = useParams();
@@ -40,7 +42,12 @@ const InspectPage = () => {
   };
 
   return (
-    <div className="container mx-auto p-8 md:py-12">
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.1 }}
+      className="container mx-auto p-8 md:py-12"
+    >
       <header className="mb-6 md:mb-8">
         <h1 className="text-2xl md:text-3xl font-bold text-left">
           Player Inspection
@@ -70,22 +77,17 @@ const InspectPage = () => {
         </div>
 
         <div className="mt-4 flex gap-4">
-          <button
-            className="px-4 py-2 bg-primary font-semibold text-white rounded-md hover:bg-green-600 transition-all cursor-pointer"
-            onClick={handleSendMessage}
-          >
-            Send Message
-          </button>
+          <Button onClick={handleSendMessage}>Send Message</Button>
 
-          <button
-            className="px-4 py-2 bg-secondary font-semibold text-white rounded-md hover:bg-red-600 transition-all cursor-pointer"
+          <Button
+            className="bg-secondary/70 hover:bg-secondary/90"
             onClick={handleDismiss}
           >
             Dismiss Notification
-          </button>
+          </Button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

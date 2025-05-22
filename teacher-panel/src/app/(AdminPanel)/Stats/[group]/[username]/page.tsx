@@ -10,7 +10,6 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-
 import "react-datepicker/dist/react-datepicker.css";
 import {
   BarChart,
@@ -24,6 +23,7 @@ import {
 } from "recharts";
 import { IconSparkles } from "@tabler/icons-react";
 import { PerformanceSummary } from "@/components/performanceSummary";
+import { motion } from "framer-motion";
 
 interface StatsEntry {
   room: string;
@@ -51,7 +51,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-muted p-3 rounded-2xl border border-border shadow-lg">
-      <p className="text-white font-medium mb-1">{label}</p>
+      <p className=" font-medium mb-1">{label}</p>
       {payload.map(({ name, value, color }: any, i: number) => (
         <p key={i} className="text-sm" style={{ color }}>
           {name}: {value}
@@ -76,12 +76,16 @@ export default function UserStatsPage() {
 
   const [startDate, setStartDate] = useState<Date>(defaultStart);
   const [endDate, setEndDate] = useState<Date>(today);
-
   const [selectedRoom, setSelectedRoom] = useState<string>("Overall");
   const [selectedStage, setSelectedStage] = useState<string>("Overall");
   const [selectedStat, setSelectedStat] = useState<string>("Overall");
   const [statsData, setStatsData] = useState<StatsEntry[]>([]);
   const [showSummary, setShowSummary] = useState(false);
+  const [innerWidth, setInnerWidth] = useState(0);
+
+  useEffect(() => {
+    setInnerWidth(window.innerWidth);
+  }, []);
 
   // Derive keys to display
   const statKeys = useMemo(
@@ -186,7 +190,12 @@ export default function UserStatsPage() {
     );
 
   return (
-    <div className="container mx-auto p-8 md:py-12">
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.1 }}
+      className="container mx-auto p-8 md:py-12"
+    >
       <header className="mb-6 md:mb-8">
         <h1 className="text-2xl md:text-3xl font-bold">Player Statistics</h1>
         <p className="text-zinc-400 mt-2">Monitor statistics for {user}</p>
@@ -197,10 +206,10 @@ export default function UserStatsPage() {
           <h2 className="md:text-xl font-bold">Level Stats</h2>
           <button
             onClick={() => statsData.length && setShowSummary(true)}
-            className="text-sm bg-light text-light-foreground font-semibold border-2 border-border rounded-2xl flex items-center gap-2 p-1 hover:border-primary transition cursor-pointer"
+            className="p-0.5 text-sm bg-light text-light-foreground font-semibold border-2 border-border rounded-2xl flex items-center gap-2 md:p-1 hover:border-primary transition cursor-pointer"
           >
             <IconSparkles className="w-5 text-primary" />
-            Performance Summary
+            {innerWidth < 500 ? "Summary" : "Perfomance Summary"}
           </button>
         </div>
 
@@ -245,10 +254,10 @@ export default function UserStatsPage() {
             >
               <label className="font-bold">Select {label}:</label>
               <Select value={value} onValueChange={onChange}>
-                <SelectTrigger className="bg-neutral text-white border-border rounded-2xl">
+                <SelectTrigger className="bg-neutral  border-border rounded-2xl">
                   <SelectValue placeholder={`Select ${label}`} />
                 </SelectTrigger>
-                <SelectContent className="bg-gray-800 text-white">
+                <SelectContent className="bg-gray-800 ">
                   {options.map((opt) => (
                     <SelectItem key={opt} value={opt}>
                       {opt}
@@ -295,19 +304,19 @@ export default function UserStatsPage() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} barCategoryGap="30%">
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="label" />
-                <YAxis />
+                {innerWidth > 800 ? <XAxis dataKey="label" interval={0} /> : ""}
+                <YAxis width={40} />
                 <RechartsTooltip
                   content={<CustomTooltip />}
                   cursor={{ fill: "transparent" }}
                 />
-                <Legend />
+                {innerWidth > 500 ? <Legend className="hidden sm:block" /> : ""}
                 {renderBars()}
               </BarChart>
             </ResponsiveContainer>
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

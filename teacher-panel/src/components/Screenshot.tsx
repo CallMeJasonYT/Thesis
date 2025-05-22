@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useWebSocket } from "@/contexts/WebSocketContext";
 import Image from "next/image";
 import { IconScreenshot } from "@tabler/icons-react";
+import { Button } from "./ui/button";
 
 interface ScreenshotProps {
   username: string;
@@ -36,13 +37,13 @@ export default function Screenshot({ username }: ScreenshotProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      <button
-        className="px-4 py-1 bg-primary hover:bg-tertiary font-semibold rounded-md transition-all cursor-pointer flex justify-center gap-2 items-center"
+      <Button
+        className="flex justify-center gap-2 items-center text-lg"
         onClick={handleScreenshotRequest}
       >
-        <IconScreenshot />
+        <IconScreenshot className="size-5" />
         Request Screenshot
-      </button>
+      </Button>
       {screenshot ? (
         <div className="w-full max-w-[720px] xl:max-w-[900px] aspect-video mx-auto">
           <h3 className="text-xl font-semibold"> Live Screenshot:</h3>
@@ -55,7 +56,7 @@ export default function Screenshot({ username }: ScreenshotProps) {
           />
         </div>
       ) : (
-        <p className="font-extralight text-white">
+        <p className="font-extralighttext-center">
           No screenshot received yet.
         </p>
       )}

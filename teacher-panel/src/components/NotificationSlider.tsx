@@ -93,7 +93,7 @@ const NotificationSlider = () => {
       <IconBellExclamation
         onClick={toggleSidebar}
         className={`w-7 xl:w-8 transition-all cursor-pointer ${
-          hasNotifications ? "animate-bell text-red-500" : "text-white"
+          hasNotifications ? "animate-bell text-red-500" : ""
         }`}
       />
 
@@ -113,7 +113,7 @@ const NotificationSlider = () => {
           <div className="flex justify-between">
             <h3 className="font-semibold text-xl">Notifications</h3>
             <button onClick={toggleSidebar}>
-              <IconX className="text-white cursor-pointer" />
+              <IconX className=" cursor-pointer" />
             </button>
           </div>
 

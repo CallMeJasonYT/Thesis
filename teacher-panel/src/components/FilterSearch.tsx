@@ -14,13 +14,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import SimpleTooltip from "./simple-tooltip";
+import { Button } from "./ui/button";
+import { Skeleton } from "./ui/skeleton";
+import { motion, AnimatePresence } from "framer-motion";
 
 const FilterSearch = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { formattedStages, statAttributes, setFilters, filters, isLoading } =
     useSharedData();
 
-  // Local state for form values
   const [selectedLevel, setSelectedLevel] = useState("");
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [endDate, setEndDate] = useState<Date>(new Date());
@@ -30,10 +33,8 @@ const FilterSearch = () => {
   }>({});
   const [stageInputs, setStageInputs] = useState<{ [key: string]: number }>({});
 
-  // Initialize local state when context data is loaded
   useEffect(() => {
     if (!isLoading && filters) {
-      // Update local state from context
       setSelectedLevel(filters.selectedLevel);
       setStartDate(filters.startDate);
       setEndDate(filters.endDate);
@@ -43,12 +44,10 @@ const FilterSearch = () => {
     }
   }, [isLoading, filters]);
 
-  // Update stage inputs when selected level changes
   useEffect(() => {
     if (selectedLevel && formattedStages[selectedLevel]) {
       const newStageInputs: Record<string, number> = {};
       formattedStages[selectedLevel].forEach((stage) => {
-        // Preserve existing values or set to 100% if new
         newStageInputs[stage] = stageInputs[stage] ?? 100;
       });
       setStageInputs(newStageInputs);
@@ -56,7 +55,6 @@ const FilterSearch = () => {
   }, [selectedLevel, formattedStages]);
 
   const handleApplyFiltersButton = () => {
-    // Apply the filters once when the user hits Apply
     setFilters({
       selectedLevel,
       startDate,
@@ -67,36 +65,6 @@ const FilterSearch = () => {
     });
     setIsOpen(false);
   };
-
-  // Return loading state or placeholder if data isn't ready
-  if (isLoading) {
-    return (
-      <div className="relative mt-2 mb-2">
-        <button
-          disabled
-          className="flex items-center gap-1 bg-gray-500 text-white px-3 py-1 rounded-lg font-semibold cursor-not-allowed"
-        >
-          <IconFilter className="size-5" />
-          Loading Filters...
-        </button>
-      </div>
-    );
-  }
-
-  // No data loaded yet
-  if (!statAttributes.length || Object.keys(formattedStages).length === 0) {
-    return (
-      <div className="relative mt-2 mb-2">
-        <button
-          disabled
-          className="flex items-center gap-1 bg-gray-500 text-white px-3 py-1 rounded-lg font-semibold cursor-not-allowed"
-        >
-          <IconFilter className="size-5" />
-          No Filter Data Available
-        </button>
-      </div>
-    );
-  }
 
   const renderStatSliders = () =>
     statAttributes.map((stat) => (
@@ -149,139 +117,163 @@ const FilterSearch = () => {
 
   return (
     <div className="relative mt-2 mb-2">
-      <button
+      <Button
         onClick={() => setIsOpen((prev) => !prev)}
-        className="flex items-center gap-1 bg-primary text-white px-3 py-1 rounded-lg font-semibold hover:bg-tertiary cursor-pointer transition"
+        className="flex items-center gap-1"
+        disabled={isLoading}
       >
         <IconFilter className="size-5" />
-        {isOpen ? "Hide Filters" : "Filters"}
-      </button>
+        {isLoading ? (
+          <Skeleton className="h-4 w-16 rounded" />
+        ) : isOpen ? (
+          "Hide Filters"
+        ) : (
+          "Filters"
+        )}
+      </Button>
 
-      <div
-        className={`transition-all duration-300 ease-in-out transform origin-top ${
-          isOpen
-            ? "scale-y-100 opacity-100 p-8 max-h-[2000px]"
-            : "scale-y-0 opacity-0 max-h-0 p-0"
-        } bg-muted rounded-lg mt-2 shadow-lg`}
-      >
-        <div className="flex flex-col gap-4 sm:gap-0 h-full">
-          <div className="flex flex-col gap-4 sm:flex-row sm:justify-between">
-            {/* Level Selection */}
-            <div className="flex flex-col gap-2">
-              <label className="text-white font-semibold text-lg">
-                Select Level:
-              </label>
-              <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-                <SelectTrigger className="bg-neutral text-white border-border rounded-2xl">
-                  <SelectValue placeholder={`Select Level:`} />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-800 text-white">
-                  {Object.keys(formattedStages).map((levelName) => (
-                    <SelectItem key={levelName} value={levelName}>
-                      {levelName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Sort & Advanced Filters */}
-            <div className="flex flex-col gap-2">
-              <label className="text-white font-semibold text-lg">
-                Sort By:
-              </label>
-              <RadioGroup
-                name="Filter Options"
-                value={selectedFilter}
-                onChange={(val) => setSelectedFilter(val)}
-              >
-                {statAttributes.map((stat) => (
-                  <div
-                    key={stat.attribute_name}
-                    className="flex gap-1 items-center"
-                  >
-                    <RadioButton
-                      value={stat.attribute_name}
-                      label={stat.attribute_name}
-                    />
-                    <div className="relative group">
-                      <IconHelp className="size-4 text-slate-400" />
-                      <div className="absolute top-auto bottom-full -translate-x-1/4 mb-2 sm:top-1/2 sm:bottom-auto sm:left-full sm:translate-x-2 sm:-translate-y-1/2 w-max px-2 py-1 text-sm text-white bg-gray-700 rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none max-w-[200px] lg:max-w-max z-10">
-                        Records are sorted based on the{" "}
-                        <b>{stat.attribute_name}</b> of the run
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-                {/* Advanced Filters */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            key="filters"
+            initial={{ opacity: 0, height: 0, y: -20 }}
+            animate={{ opacity: 1, height: "auto", y: 0 }}
+            exit={{ opacity: 0, height: 0, y: -20 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="bg-neutral rounded-lg mt-2 shadow-lg overflow-hidden"
+          >
+            <div className="p-8 flex flex-col gap-4 sm:gap-0 h-full">
+              <div className="flex flex-col gap-4 sm:flex-row sm:justify-between">
+                {/* Level Selection */}
                 <div className="flex flex-col gap-2">
-                  <div className="flex flex-row items-center gap-1">
-                    <RadioButton value="advanced" label="Advanced Filters" />
-                  </div>
-
-                  {selectedFilter === "advanced" && (
-                    <div className="text-white bg-neutral rounded-lg p-2">
-                      <p className="font-semibold mb-2">Adjust Weights (%)</p>
-                      <p className="text-sm text-gray-300 mb-4 italic">
-                        <span className="font-semibold">Formula:</span> ∑
-                        <sub>x</sub> [Stage<sub>x</sub>Weight × ∑<sub>y</sub>{" "}
-                        (Stage<sub>x</sub>Attr<sub>y</sub>Weight × Stage
-                        <sub>x</sub>Attr<sub>y</sub>Value)]
-                      </p>
-                      <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-                        {renderStatSliders()}
-                        {renderStageSliders()}
-                      </div>
-                    </div>
-                  )}
+                  <label className="font-semibold text-normal lg:text-lg">
+                    Select Level:
+                  </label>
+                  <Select
+                    value={selectedLevel}
+                    onValueChange={setSelectedLevel}
+                  >
+                    <SelectTrigger className="bg-neutral border-border rounded-2xl">
+                      <SelectValue placeholder={`Select Level:`} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-800">
+                      {Object.keys(formattedStages).map((levelName) => (
+                        <SelectItem key={levelName} value={levelName}>
+                          {levelName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              </RadioGroup>
-            </div>
 
-            {/* Date Picker */}
-            <div className="flex flex-col flex-wrap gap-2">
-              <p className="font-semibold text-white text-lg">
-                Select Date Range:
-              </p>
-              <div className="flex flex-wrap items-center gap-2">
-                <DatePicker
-                  selected={startDate}
-                  onChange={(date) => date && setStartDate(date)}
-                  selectsStart
-                  startDate={startDate}
-                  endDate={endDate}
-                  dateFormat="yyyy-MM-dd"
-                  className="p-1 border rounded-2xl bg-neutral text-center w-[150px]"
-                />
-                <span className="font-bold text-white">to</span>
-                <DatePicker
-                  selected={endDate}
-                  onChange={(date) => date && setEndDate(date)}
-                  selectsEnd
-                  startDate={startDate}
-                  endDate={endDate}
-                  minDate={startDate}
-                  dateFormat="yyyy-MM-dd"
-                  className="p-1 border rounded-2xl bg-neutral text-center w-[150px]"
-                />
+                {/* Sort & Advanced Filters */}
+                <div className="flex flex-col gap-2">
+                  <label className="font-semibold text-normal lg:text-lg">
+                    Sort By:
+                  </label>
+                  <RadioGroup
+                    name="Filter Options"
+                    value={selectedFilter}
+                    onChange={(val) => setSelectedFilter(val)}
+                  >
+                    {statAttributes.map((stat) => (
+                      <div
+                        key={stat.attribute_name}
+                        className="flex gap-1 items-center"
+                      >
+                        <RadioButton
+                          value={stat.attribute_name}
+                          label={stat.attribute_name}
+                        />
+                        <SimpleTooltip
+                          content={`Records are sorted based on the ${stat.attribute_name} of the run`}
+                          side="right"
+                        >
+                          <IconHelp className="size-4 text-slate-400" />
+                        </SimpleTooltip>
+                      </div>
+                    ))}
+
+                    {/* Advanced Filters */}
+                    <div className="flex flex-col gap-2">
+                      <div className="flex flex-row items-center gap-1">
+                        <RadioButton
+                          value="advanced"
+                          label="Advanced Filters"
+                        />
+                        <SimpleTooltip
+                          content={
+                            <>
+                              <span className="font-semibold">Formula:</span> ∑
+                              <sub>x</sub> [Stage<sub>x</sub>Weight × ∑
+                              <sub>y</sub> (Stage<sub>x</sub>Attr<sub>y</sub>
+                              Weight × Stage
+                              <sub>x</sub>Attr<sub>y</sub>Value)]
+                            </>
+                          }
+                          side="right"
+                        >
+                          <IconHelp className="size-4 text-slate-400 cursor-help" />
+                        </SimpleTooltip>
+                      </div>
+
+                      {selectedFilter === "advanced" && (
+                        <div className="bg-neutral rounded-lg p-2">
+                          <p className="font-semibold mb-2">Adjust Weights</p>
+                          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                            {renderStatSliders()}
+                            {renderStageSliders()}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                {/* Date Picker */}
+                <div className="flex flex-col flex-wrap gap-2">
+                  <p className="font-semibold text-normal lg:text-lg">
+                    Select Date Range:
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <DatePicker
+                      selected={startDate}
+                      onChange={(date) => date && setStartDate(date)}
+                      selectsStart
+                      startDate={startDate}
+                      endDate={endDate}
+                      dateFormat="yyyy-MM-dd"
+                      className="p-1 border rounded-2xl bg-neutral text-center w-[100px] md:w-[150px]"
+                    />
+                    <span className="font-bold">to</span>
+                    <DatePicker
+                      selected={endDate}
+                      onChange={(date) => date && setEndDate(date)}
+                      selectsEnd
+                      startDate={startDate}
+                      endDate={endDate}
+                      minDate={startDate}
+                      dateFormat="yyyy-MM-dd"
+                      className="p-1 border rounded-2xl bg-neutral text-center w-[100px] md:w-[150px]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Apply Button */}
+              <div className="flex justify-center sm:self-end">
+                <Button
+                  className="flex items-center"
+                  onClick={handleApplyFiltersButton}
+                >
+                  <IconFilterCheck className="size-5" />
+                  Apply Filters
+                </Button>
               </div>
             </div>
-          </div>
-
-          {/* Button */}
-          <div className="flex justify-center sm:self-end">
-            <button
-              className="w-full bg-primary font-semibold flex items-center justify-center gap-2 text-white px-4 py-1 rounded-lg shadow-lg 
-            hover:bg-tertiary cursor-pointer transition-all"
-              onClick={handleApplyFiltersButton}
-            >
-              {<IconFilterCheck className="size-5" />}
-              Apply Filters
-            </button>
-          </div>
-        </div>
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -1,7 +1,7 @@
 "use client";
 import { type ReactElement, useState } from "react";
 import Link from "next/link";
-import { motion } from "motion/react";
+import { motion } from "framer-motion";
 import Image from "next/image";
 import NotificationSlider from "./NotificationSlider";
 
@@ -77,14 +77,14 @@ const Navbar = (): ReactElement => {
         </div>
 
         {/* Desktop Links */}
-        <div className="hidden sm:flex items-center gap-3.5">
+        <div className="hidden sm:flex items-center gap-1.5 md:gap-3.5">
           {links.map((link, index) => (
             <SimpleTooltip key={index} content={link.tooltip} side="bottom">
               <Link
                 className={cn(
-                  "px-2 sm:px-2.5 md:px-3 py-1.5",
-                  "flex gap-1.5 sm:gap-2.5 items-center font-semibold rounded-xl transition-all transform-gpu",
-                  "bg-zinc-700/50 text-white hover:text-primary"
+                  "px-1.5 sm:px-2 md:px-3 py-1",
+                  "flex gap-1 lg:gap-2.5 items-center font-semibold border border-border rounded-2xl transition-all",
+                  "bg-zinc-700/50  hover:text-primary"
                 )}
                 href={link.href}
                 draggable={false}
@@ -101,10 +101,7 @@ const Navbar = (): ReactElement => {
 
         {/* Burger Menu Button */}
         <div className="block sm:hidden">
-          <IconMenu2
-            className="text-white cursor-pointer"
-            onClick={toggleMenu}
-          />
+          <IconMenu2 className=" cursor-pointer" onClick={toggleMenu} />
         </div>
       </motion.nav>
 
@@ -126,7 +123,7 @@ const Navbar = (): ReactElement => {
       >
         <div className="p-8">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-white font-semibold text-xl">Menu</h3>
+            <h3 className=" font-semibold text-xl">Menu</h3>
             <IconX className="cursor-pointer" onClick={toggleMenu} />
           </div>
 
@@ -137,7 +134,7 @@ const Navbar = (): ReactElement => {
                   className={cn(
                     "p-4",
                     "flex gap-2 items-center font-semibold rounded-2xl transition-all transform-gpu",
-                    "bg-zinc-700/30 text-white hover:text-primary text-xl"
+                    "bg-zinc-700/30  hover:text-primary text-xl"
                   )}
                   href={link.href}
                   draggable={false}

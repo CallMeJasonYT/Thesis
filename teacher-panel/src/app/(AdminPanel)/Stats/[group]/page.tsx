@@ -157,7 +157,7 @@ const GroupStatsPage = () => {
           <div className="flex flex-col sm:flex-row gap-2 items-center">
             <label className="font-bold">Select Level:</label>
             <select
-              className="bg-neutral text-white border p-1 rounded-md"
+              className="bg-neutral  border p-1 rounded-md"
               value={selectedRoom}
               onChange={(e) => {
                 const newLevel = e.target.value;
@@ -180,7 +180,7 @@ const GroupStatsPage = () => {
           <div className="flex flex-col sm:flex-row gap-2 items-center">
             <label className="font-bold">Select Stage:</label>
             <select
-              className="bg-neutral text-white border p-1 rounded-md"
+              className="bg-neutral  border p-1 rounded-md"
               value={selectedStage}
               onChange={(e) => setSelectedStage(e.target.value)}
             >
@@ -205,7 +205,7 @@ const GroupStatsPage = () => {
           <div className="flex flex-col sm:flex-row gap-2 items-center">
             <label className="font-bold">Select Stat:</label>
             <select
-              className="bg-neutral text-white border p-1 rounded-md"
+              className="bg-neutral  border p-1 rounded-md"
               value={selectedStat}
               onChange={(e) => setSelectedStat(e.target.value)}
             >

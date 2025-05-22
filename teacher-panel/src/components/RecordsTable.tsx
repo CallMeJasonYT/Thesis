@@ -9,19 +9,90 @@ import {
   TableCell,
 } from "./Table";
 import { useSharedData } from "@/contexts/SharedDataContext";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "./ui/pagination";
+import SimpleTooltip from "./simple-tooltip";
+import { Skeleton } from "./ui/skeleton";
+
+interface AttributeValue {
+  Sum: number;
+  [stage: string]: number;
+}
 
 interface LeaderboardRecord {
   date: string;
   username: string;
   attributes: {
-    [key: string]: number;
+    [key: string]: AttributeValue;
   };
+  score: number;
 }
 
-const RecordsTable: React.FC<{ top?: number }> = ({ top }) => {
-  const { filters, isLoading, statAttributes } = useSharedData();
+interface LeaderboardProps {
+  itemsPerPage?: number;
+}
+
+const TableSkeleton: React.FC<{ columns: number; rows: number }> = ({
+  columns,
+  rows,
+}) => {
+  return (
+    <>
+      {Array.from({ length: rows }, (_, i) => (
+        <TableRow key={i} className="border-muted">
+          <TableCell colSpan={columns} className="text-center py-4">
+            <Skeleton className="h-4 w-full rounded" />
+          </TableCell>
+        </TableRow>
+      ))}
+    </>
+  );
+};
+
+const AttributeTooltipContent: React.FC<{
+  attributeName: string;
+  attributeValue: AttributeValue;
+  score: number;
+}> = ({ attributeName, attributeValue, score }) => {
+  const stages = Object.entries(attributeValue).filter(
+    ([key]) => key !== "Sum"
+  );
+
+  return (
+    <div className="p-2">
+      <div className="font-semibold text-sm mb-2">{attributeName}</div>
+      <div className="space-y-1">
+        <div className="text-xs">
+          <span className="font-medium">Total: </span>
+          <span>{attributeValue.Sum}</span>
+        </div>
+        {stages.map(([stage, value]) => (
+          <div key={stage} className="text-xs">
+            <span className="font-medium">{stage}: </span>
+            <span>{value}</span>
+          </div>
+        ))}
+        <div className="text-xs mt-2 border-t pt-2 text-primary">
+          <span className="font-medium">Score: </span>
+          <span>{score}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const RecordsTable: React.FC<LeaderboardProps> = ({ itemsPerPage = 10 }) => {
+  const { filters, statAttributes } = useSharedData();
   const [data, setData] = useState<LeaderboardRecord[]>([]);
   const [isLoadingRecords, setIsLoadingRecords] = useState(false);
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -44,6 +115,8 @@ const RecordsTable: React.FC<{ top?: number }> = ({ top }) => {
 
         const fetchedData = await response.json();
         setData(fetchedData.leaderboardResults);
+        console.log(fetchedData);
+        setCurrentPage(1);
       } catch (error) {
         console.error("Error fetching records:", error);
         setData([]);
@@ -55,88 +128,131 @@ const RecordsTable: React.FC<{ top?: number }> = ({ top }) => {
     fetchStats();
   }, [filters]);
 
-  // Slice to get the top X users if `top` is provided
-  const displayedData = top ? data.slice(0, top) : data;
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center p-8">
-        <div className="text-white">Loading data...</div>
-      </div>
-    );
-  }
-
   const totalColumns = 2 + statAttributes.length;
+  const records = data || [];
+  const pageCount = Math.ceil(records.length / itemsPerPage);
+  const start = (currentPage - 1) * itemsPerPage;
+  const paginatedRecords = records.slice(start, start + itemsPerPage);
+
+  const goToPage = (page: number) => {
+    if (page < 1 || page > pageCount) return;
+    setCurrentPage(page);
+  };
 
   return (
     <div className="space-y-4">
-      <div className="border shadow-lg rounded-xl">
-        <div className="max-h-96 overflow-y-auto">
-          <Table className="w-full">
-            <TableHeader>
-              <TableRow className="bg-neutral border-muted">
-                <TableHead className="text-center bg-neutral">
-                  Username
+      <div className="border shadow-lg rounded-2xl">
+        <Table className="w-full overflow-x-auto">
+          <TableHeader>
+            <TableRow className="bg-neutral border-muted">
+              <TableHead className="text-center bg-neutral">Username</TableHead>
+              <TableHead className="text-center bg-neutral">Date</TableHead>
+              {statAttributes.map((attribute) => (
+                <TableHead
+                  key={attribute.attribute_name}
+                  className="text-center bg-neutral"
+                >
+                  {attribute.attribute_name}
                 </TableHead>
-                <TableHead className="text-center bg-neutral">Date</TableHead>
-                {statAttributes.map((attribute) => (
-                  <TableHead
-                    key={attribute.attribute_name}
-                    className="text-center bg-neutral"
-                  >
-                    {attribute.attribute_name}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoadingRecords ? (
-                <TableRow className="bg-neutral border-muted">
-                  <TableCell
-                    colSpan={totalColumns}
-                    className="text-center py-4"
-                  >
-                    Loading records...
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoadingRecords ? (
+              <TableSkeleton columns={totalColumns} rows={itemsPerPage} />
+            ) : data.length > 0 && paginatedRecords.length ? (
+              paginatedRecords.map((record, index) => (
+                <TableRow
+                  key={index}
+                  className="border-muted hover:bg-muted/80"
+                >
+                  <TableCell className="text-center">
+                    {record.username}
                   </TableCell>
-                </TableRow>
-              ) : displayedData.length > 0 ? (
-                displayedData.map((record, index) => (
-                  <TableRow key={index} className="border-muted hover:bg-light">
-                    <TableCell className="text-center">
-                      {record.username}
-                    </TableCell>
-                    <TableCell className="text-center">{record.date}</TableCell>
-                    {statAttributes.map((attribute) => (
+                  <TableCell className="text-center">{record.date}</TableCell>
+                  {statAttributes.map((attribute) => {
+                    const attributeValue =
+                      record.attributes?.[attribute.attribute_name];
+                    const displayValue = attributeValue?.Sum ?? "-";
+
+                    return (
                       <TableCell
                         key={attribute.attribute_name}
                         className="text-center"
                       >
-                        {record.attributes &&
-                        record.attributes[attribute.attribute_name] !==
-                          undefined
-                          ? record.attributes[attribute.attribute_name]
-                          : "-"}
+                        {attributeValue &&
+                        typeof attributeValue === "object" &&
+                        "Sum" in attributeValue ? (
+                          <SimpleTooltip
+                            content={
+                              <AttributeTooltipContent
+                                attributeName={attribute.attribute_name}
+                                attributeValue={attributeValue}
+                                score={record.score}
+                              />
+                            }
+                            side="top"
+                          >
+                            <span className="cursor-help hover:text-primary transition-colors">
+                              {displayValue}
+                            </span>
+                          </SimpleTooltip>
+                        ) : (
+                          <span>{displayValue}</span>
+                        )}
                       </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow className="bg-neutral border-muted">
-                  <TableCell
-                    colSpan={totalColumns}
-                    className="text-center py-4"
-                  >
-                    No records found with the current filters.
-                  </TableCell>
+                    );
+                  })}
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+              ))
+            ) : (
+              <TableRow className="bg-neutral border-muted">
+                <TableCell colSpan={totalColumns} className="text-center py-4">
+                  No records found with the current filters.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
 
+      {pageCount > 1 && (
+        <Pagination className="p-4">
+          <PaginationPrevious onClick={() => goToPage(currentPage - 1)} />
+          <PaginationContent>
+            {Array.from({ length: pageCount }, (_, i) => {
+              const page = i + 1;
+              if (
+                page === 1 ||
+                page === pageCount ||
+                (page >= currentPage - 1 && page <= currentPage + 1)
+              ) {
+                return (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      isActive={page === currentPage}
+                      onClick={() => goToPage(page)}
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                );
+              }
+              if (page === currentPage - 2 || page === currentPage + 2) {
+                return (
+                  <PaginationItem key={`ellipsis-${page}`}>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                );
+              }
+              return null;
+            })}
+          </PaginationContent>
+          <PaginationNext onClick={() => goToPage(currentPage + 1)} />
+        </Pagination>
+      )}
       <div className="text-right text-sm text-gray-400">
-        {displayedData.length} records found
+        {data.length} records found
       </div>
     </div>
   );

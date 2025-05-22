@@ -64,7 +64,11 @@ export const getLeaderboardRecords = async (req, res) => {
       endDateISO,
     ]);
 
+    let minRawScore = Infinity;
+    let maxRawScore = -Infinity;
+
     if (selectedFilter === "advanced" && stageInputs && attributeInputs) {
+      // First pass: calculate raw scores
       rawResults.forEach((record) => {
         let score = 0;
 
@@ -78,10 +82,10 @@ export const getLeaderboardRecords = async (req, res) => {
 
             if (attrName === "Total Time") {
               const timeKey = `${stageName} Time`;
-              attrValue = parseInt(record[timeKey]);
+              attrValue = parseInt(record[timeKey]) || 0;
             } else if (attrName === "Mistakes") {
               const mistakesKey = `${stageName} Mistakes`;
-              attrValue = parseInt(record[mistakesKey] * 10);
+              attrValue = (parseInt(record[mistakesKey]) || 0) * 10;
             }
 
             stageScore += attrWeight * attrValue;
@@ -90,24 +94,84 @@ export const getLeaderboardRecords = async (req, res) => {
           score += stageWeight * stageScore;
         }
 
-        record.advancedScore = score;
+        record._rawScore = score;
+        if (score < minRawScore) minRawScore = score;
+        if (score > maxRawScore) maxRawScore = score;
       });
 
-      rawResults.sort((a, b) => a.advancedScore - b.advancedScore);
+      // Second pass: normalize to 0–1000 (higher is better)
+      rawResults.forEach((record) => {
+        let normalized = 1000;
+        if (maxRawScore !== minRawScore) {
+          normalized =
+            (1000 * (maxRawScore - record._rawScore)) /
+            (maxRawScore - minRawScore);
+        }
+        record.advancedScore = parseFloat(normalized.toFixed(2));
+        delete record._rawScore;
+      });
+
+      // Sort by final score
+      rawResults.sort((a, b) => b.advancedScore - a.advancedScore);
     } else {
       rawResults.sort(
         (a, b) => parseInt(a[selectedFilter]) - parseInt(b[selectedFilter])
       );
     }
 
-    const formattedResults = rawResults.map((row) => ({
-      date: row.date,
-      username: row.username,
-      attributes: {
-        "Total Time": parseInt(row["Total Time"]),
-        Mistakes: parseInt(row["Mistakes"]),
-      },
-    }));
+    const formattedResults = rawResults.map((row) => {
+      const stageTimes = {};
+      const stageMistakes = {};
+
+      for (const key in row) {
+        if (key.endsWith("Time") && key !== "Total Time") {
+          const stageName = key.replace(" Time", "");
+          const timeValue = row[key];
+          stageTimes[stageName] =
+            timeValue != null ? parseInt(timeValue, 10) : 0;
+          if (isNaN(stageTimes[stageName])) {
+            stageTimes[stageName] = 0;
+          }
+        }
+        if (key.endsWith("Mistakes") && key !== "Mistakes") {
+          const stageName = key.replace(" Mistakes", "");
+          const mistakeValue = row[key];
+          stageMistakes[stageName] =
+            mistakeValue != null ? parseInt(mistakeValue, 10) : 0;
+          if (isNaN(stageMistakes[stageName])) {
+            stageMistakes[stageName] = 0;
+          }
+        }
+      }
+
+      const totalTime =
+        row["Total Time"] != null ? parseInt(row["Total Time"], 10) : 0;
+      const totalMistakes =
+        row["Mistakes"] != null ? parseInt(row["Mistakes"], 10) : 0;
+
+      const attributes = {
+        "Total Time": {
+          Sum: isNaN(totalTime) ? 0 : totalTime,
+          ...stageTimes,
+        },
+        Mistakes: {
+          Sum: isNaN(totalMistakes) ? 0 : totalMistakes,
+          ...stageMistakes,
+        },
+      };
+
+      const result = {
+        date: row.date,
+        username: row.username,
+        attributes,
+      };
+
+      if (row.advancedScore !== undefined) {
+        result.score = row.advancedScore;
+      }
+
+      return result;
+    });
 
     res.status(200).json({ leaderboardResults: formattedResults });
   } catch (err) {
