@@ -12,27 +12,27 @@ interface FilterState {
 }
 
 interface SharedData {
-  formattedStages: Record<string, string[]>;
+  levelStagesMap: Record<string, string[]>;
   groups: { group_name: string }[];
   statAttributes: { attribute_name: string }[];
   filters: FilterState | null;
   setFilters: (filters: FilterState) => void;
-  isLoading: boolean; // Add loading state
+  isLoading: boolean;
 }
 
 const SharedDataContext = createContext<SharedData>({
-  formattedStages: {},
+  levelStagesMap: {},
   groups: [],
   statAttributes: [],
   filters: null,
   setFilters: () => {},
-  isLoading: true, // Default to loading
+  isLoading: true,
 });
 
 export const SharedDataProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [formattedStages, setFormattedStages] = useState<
+  const [levelStagesMap, setlevelStagesMap] = useState<
     Record<string, string[]>
   >({});
   const [groups, setGroups] = useState<{ group_name: string }[]>([]);
@@ -46,7 +46,7 @@ export const SharedDataProvider: React.FC<{ children: React.ReactNode }> = ({
     const fetchAll = async () => {
       setIsLoading(true);
       try {
-        const [stageRes, groupRes, statAttrbutesRes] = await Promise.all([
+        const [levelStagesRes, groupRes, statAttrbutesRes] = await Promise.all([
           fetch(
             `http://${process.env.NEXT_PUBLIC_SERVER_IP}:${process.env.NEXT_PUBLIC_DB_API_PORT}/api/web/levelStages`
           ),
@@ -59,26 +59,29 @@ export const SharedDataProvider: React.FC<{ children: React.ReactNode }> = ({
         ]);
 
         const [stageData, groupData, statAttributeData] = await Promise.all([
-          stageRes.json(),
+          levelStagesRes.json(),
           groupRes.json(),
           statAttrbutesRes.json(),
         ]);
 
-        const formattedStages: Record<string, string[]> = {};
+        const levelStagesMap: Record<string, string[]> = {};
         stageData.data.forEach((entry: any) => {
-          formattedStages[entry.level_name] = entry.stages;
+          levelStagesMap[entry.level_name] = entry.stages;
         });
 
-        setFormattedStages(formattedStages);
+        console.log(statAttributeData);
+        console.log(statAttributeData.attributeData);
+
+        setlevelStagesMap(levelStagesMap);
         setGroups(groupData.groupData);
         setStatAttributes(statAttributeData.attributeData);
 
         if (
-          Object.keys(formattedStages).length > 0 &&
+          Object.keys(levelStagesMap).length > 0 &&
           statAttributeData.attributeData.length > 0
         ) {
           initializeDefaultFilters(
-            formattedStages,
+            levelStagesMap,
             statAttributeData.attributeData
           );
         }
@@ -129,7 +132,7 @@ export const SharedDataProvider: React.FC<{ children: React.ReactNode }> = ({
   return (
     <SharedDataContext.Provider
       value={{
-        formattedStages,
+        levelStagesMap,
         groups,
         statAttributes,
         filters,

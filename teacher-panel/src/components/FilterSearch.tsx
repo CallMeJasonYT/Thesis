@@ -21,7 +21,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const FilterSearch = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { formattedStages, statAttributes, setFilters, filters, isLoading } =
+  const { levelStagesMap, statAttributes, setFilters, filters, isLoading } =
     useSharedData();
 
   const [selectedLevel, setSelectedLevel] = useState("");
@@ -45,14 +45,14 @@ const FilterSearch = () => {
   }, [isLoading, filters]);
 
   useEffect(() => {
-    if (selectedLevel && formattedStages[selectedLevel]) {
+    if (selectedLevel && levelStagesMap[selectedLevel]) {
       const newStageInputs: Record<string, number> = {};
-      formattedStages[selectedLevel].forEach((stage) => {
+      levelStagesMap[selectedLevel].forEach((stage) => {
         newStageInputs[stage] = stageInputs[stage] ?? 100;
       });
       setStageInputs(newStageInputs);
     }
-  }, [selectedLevel, formattedStages]);
+  }, [selectedLevel, levelStagesMap]);
 
   const handleApplyFiltersButton = () => {
     setFilters({
@@ -93,7 +93,7 @@ const FilterSearch = () => {
     ));
 
   const renderStageSliders = () =>
-    formattedStages[selectedLevel]?.map((stage) => (
+    levelStagesMap[selectedLevel]?.map((stage) => (
       <div key={stage} className="flex flex-col items-start gap-1 w-full">
         <label className="text-sm">
           {stage}: {stageInputs[stage] ?? 100}%
@@ -157,7 +157,7 @@ const FilterSearch = () => {
                       <SelectValue placeholder={`Select Level:`} />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800">
-                      {Object.keys(formattedStages).map((levelName) => (
+                      {Object.keys(levelStagesMap).map((levelName) => (
                         <SelectItem key={levelName} value={levelName}>
                           {levelName}
                         </SelectItem>

@@ -62,7 +62,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function UserStatsPage() {
-  const { statAttributes, formattedStages } = useSharedData();
+  const { statAttributes, levelStagesMap } = useSharedData();
   const params = useParams();
   const user = params.username;
 
@@ -99,10 +99,10 @@ export default function UserStatsPage() {
   const stageList = useMemo(() => {
     const allStages =
       selectedRoom === "Overall"
-        ? Array.from(new Set(Object.values(formattedStages).flat()))
-        : formattedStages[selectedRoom] || [];
+        ? Array.from(new Set(Object.values(levelStagesMap).flat()))
+        : levelStagesMap[selectedRoom] || [];
     return selectedStage === "Overall" ? allStages : [selectedStage];
-  }, [selectedRoom, selectedStage, formattedStages]);
+  }, [selectedRoom, selectedStage, levelStagesMap]);
 
   // Fetch stats on filters change
   useEffect(() => {
@@ -123,6 +123,7 @@ export default function UserStatsPage() {
           }
         );
         const json = await res.json();
+        console.log(json);
         setStatsData(
           json.userResults.map((e: any) => ({
             room: e.level_name,
@@ -144,9 +145,7 @@ export default function UserStatsPage() {
   const chartData = useMemo(() => {
     const grouped = new Map<string, any>();
     const levels =
-      selectedRoom === "Overall"
-        ? Object.keys(formattedStages)
-        : [selectedRoom];
+      selectedRoom === "Overall" ? Object.keys(levelStagesMap) : [selectedRoom];
 
     statsData.forEach(({ date, room, stage, attributes }) => {
       if (!levels.includes(room) || !stageList.includes(stage)) return;
@@ -169,7 +168,7 @@ export default function UserStatsPage() {
         ...averageGroupedValues(d),
       }))
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [statsData, selectedRoom, statKeys, stageList, formattedStages]);
+  }, [statsData, selectedRoom, statKeys, stageList, levelStagesMap]);
 
   // Predefined bar colors
   const barColors = useMemo(
@@ -226,7 +225,7 @@ export default function UserStatsPage() {
             {
               label: "Level",
               value: selectedRoom,
-              options: ["Overall", ...Object.keys(formattedStages)],
+              options: ["Overall", ...Object.keys(levelStagesMap)],
               onChange: setSelectedRoom,
             },
             {
@@ -234,7 +233,7 @@ export default function UserStatsPage() {
               value: selectedStage,
               options: [
                 "Overall",
-                ...Array.from(new Set(Object.values(formattedStages).flat())),
+                ...Array.from(new Set(Object.values(levelStagesMap).flat())),
               ],
               onChange: setSelectedStage,
             },

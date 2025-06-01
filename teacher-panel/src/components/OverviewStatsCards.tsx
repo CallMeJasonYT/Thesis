@@ -15,8 +15,8 @@ import {
 } from "@tabler/icons-react";
 
 const OverviewStatsCards = () => {
-  const { formattedStages } = useSharedData();
-  const levels = Object.keys(formattedStages);
+  const { levelStagesMap } = useSharedData();
+  const levels = Object.keys(levelStagesMap);
   const { sendMessage, addListener, removeListener, isConnected } =
     useWebSocket();
   const [stats, setStats] = useState<any>(null);
