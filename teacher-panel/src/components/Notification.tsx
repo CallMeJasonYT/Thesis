@@ -1,18 +1,12 @@
 "use client";
 
 interface NotificationProps {
-  username: string;
   message: string;
   onDismiss: () => void;
   onInspect: () => void;
 }
 
-const Notification = ({
-  username,
-  message,
-  onDismiss,
-  onInspect,
-}: NotificationProps) => {
+const Notification = ({ message, onDismiss, onInspect }: NotificationProps) => {
   return (
     <div className="flex items-center justify-between bg-zinc-800 p-4 rounded-lg mt-6 mb-6">
       <div>

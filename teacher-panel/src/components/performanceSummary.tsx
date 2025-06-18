@@ -15,6 +15,7 @@ interface PerformanceEntry {
 }
 
 interface PerformanceSummaryProps {
+  summaryType: string;
   data: PerformanceEntry[];
   onClose: () => void;
 }
@@ -29,7 +30,7 @@ const thresholds: Record<string, Record<string, Record<string, number>>> = {
   },
 };
 
-function generatePrompt(data: PerformanceEntry[], username: string): string {
+function generatePrompt(data: PerformanceEntry[], type: string): string {
   const grouped: Record<
     string,
     Record<string, Record<string, Record<string, number>>>
@@ -44,32 +45,36 @@ function generatePrompt(data: PerformanceEntry[], username: string): string {
   const lines: string[] = [];
 
   lines.push(
-    `You are an AI tool that summarizes a student's performance in an educational game that uses sorting alogirthms to solve puzzles.`
+    `You are an AI tool that summarizes students performances in a ` +
+      type +
+      ` level in an educational game that uses sorting alogirthms to solve puzzles.`
   );
 
-  lines.push(`\n========================`);
-  lines.push(`Student Information`);
-  lines.push(`========================`);
-  lines.push(`Username: ${username}`);
+  data.forEach((entry) => {
+    lines.push(`\n========================`);
+    lines.push(`Student Information`);
+    lines.push(`========================`);
+    lines.push(`Username: ${entry.username}`);
 
-  lines.push(`\n========================`);
-  lines.push(`Performance Data`);
-  lines.push(`========================`);
+    lines.push(`\n========================`);
+    lines.push(`Performance Data`);
+    lines.push(`========================`);
 
-  for (const [date, rooms] of Object.entries(grouped)) {
-    lines.push(`Date: ${date}`);
-    for (const [room, stages] of Object.entries(rooms)) {
-      lines.push(`  Room: ${room}`);
-      for (const [stage, attrs] of Object.entries(stages)) {
-        const attrStrings = Object.entries(attrs).map(
-          ([key, value]) =>
-            `    - ${key}: ${value}${key.includes("Time") ? "s" : ""}`
-        );
-        lines.push(`    Stage: ${stage}`);
-        lines.push(...attrStrings);
+    for (const [date, rooms] of Object.entries(grouped)) {
+      lines.push(`Date: ${date}`);
+      for (const [room, stages] of Object.entries(rooms)) {
+        lines.push(`  Room: ${room}`);
+        for (const [stage, attrs] of Object.entries(stages)) {
+          const attrStrings = Object.entries(attrs).map(
+            ([key, value]) =>
+              `    - ${key}: ${value}${key.includes("Time") ? "s" : ""}`
+          );
+          lines.push(`    Stage: ${stage}`);
+          lines.push(...attrStrings);
+        }
       }
     }
-  }
+  });
 
   lines.push(`\n========================`);
   lines.push(`Acceptable Thresholds`);
@@ -101,13 +106,16 @@ function generatePrompt(data: PerformanceEntry[], username: string): string {
   lines.push(`Instructions`);
   lines.push(`========================`);
   lines.push(
-    `Generate a paragraph that has line-breaks in order to look good. I don't want you to use ** for emphasis. Summarize the student's performance for the teacher. Indicate if they performed well, struggled, or exceeded thresholds. Mention where they made progress or regressed. Also make sure to give some advice for the next steps for the student.`
+    `Generate a paragraph that has line-breaks in order to look good. I don't want you to use ** for emphasis. Summarize the performance of the ` +
+      type +
+      ` for the teacher. Indicate if they performed well, struggled, or exceeded thresholds. Mention where they made progress or regressed. Also make sure to give some advice for the next steps for the student.`
   );
 
   return lines.join("\n");
 }
 
 export const PerformanceSummary = ({
+  summaryType,
   data,
   onClose,
 }: PerformanceSummaryProps) => {
@@ -129,8 +137,7 @@ export const PerformanceSummary = ({
   useEffect(() => {
     const fetchSummary = async () => {
       setLoading(true);
-      const username = data[0]?.username ?? "Unknown";
-      const prompt = generatePrompt(data, username);
+      const prompt = generatePrompt(data, summaryType);
       console.log(prompt);
       const result = await fetchChatgptResponse(prompt);
       setResponse(result);
@@ -142,20 +149,20 @@ export const PerformanceSummary = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75">
-      <div className="bg-muted p-6 rounded-lg max-w-xl w-2/3 shadow-lg relative">
+      <div className="bg-muted p-6 rounded-lg max-w-xl w-3/4 shadow-lg relative max-h-[80dvh]">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
           className="flex items-center mb-4 justify-between"
         >
-          <h2 className="text-2xl font-semibold text-center">
+          <h2 className="text-lg md:text-2xl font-semibold text-center">
             Performance Summary
           </h2>
-          <div className="flex gap-5 items-center">
+          <div className="flex gap-2 md:gap-4 items-center">
             <button
               onClick={handleCopy}
-              className="flex items-center gap-2 cursor-pointer border border-border rounded-xl px-2 py-1
+              className="ml-1 flex items-center gap-2 cursor-pointer border border-border rounded-xl px-2 py-1
              hover:border-primary/40 transition-all duration-300"
               disabled={!response}
             >
@@ -167,7 +174,7 @@ export const PerformanceSummary = ({
               ) : (
                 <>
                   <IconCopy className="w-4" />
-                  <span className="font-semibold">Copy&nbsp;Summary</span>
+                  <span className="font-semibold">Copy</span>
                 </>
               )}
             </button>
@@ -183,7 +190,9 @@ export const PerformanceSummary = ({
             <Skeleton className="h-6 w-4/6" />
           </div>
         ) : (
-          <div className="whitespace-pre-wrap">{response}</div>
+          <div className="whitespace-pre-wrap max-h-[calc(80dvh-130px)] overflow-auto pr-2]">
+            {response}
+          </div>
         )}
       </div>
     </div>

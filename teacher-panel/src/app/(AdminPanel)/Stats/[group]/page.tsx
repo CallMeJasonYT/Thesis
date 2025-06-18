@@ -321,7 +321,7 @@ export default function UserStatsPage() {
       className="container mx-auto p-8 md:py-12"
     >
       <header className="mb-6 md:mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold">Player Statistics</h1>
+        <h1 className="text-2xl md:text-3xl font-bold">Group Statistics</h1>
         <p className="text-zinc-400 mt-2">
           Monitor statistics for Group {group}
         </p>
@@ -341,6 +341,7 @@ export default function UserStatsPage() {
 
         {showSummary && (
           <PerformanceSummary
+            summaryType="group"
             data={statsData}
             onClose={() => setShowSummary(false)}
           />

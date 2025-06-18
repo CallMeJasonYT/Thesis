@@ -63,7 +63,7 @@ export const saveLevelCompletion = async (req, res) => {
 
     // Loop through stage_times array (now objects with key-value)
     for (let stageEntry of stage_times) {
-      const stageIndex = parseInt(stageEntry.key); // Convert "key" to an integer
+      const stageIndex = parseInt(stageEntry.key) + 1; // Convert "key" to an integer
       const stageElapsedTime = stageEntry.value;
 
       let stageCompleted = stageElapsedTime > 0;
@@ -74,18 +74,17 @@ export const saveLevelCompletion = async (req, res) => {
       `;
       const stageResult = await pool.query(stageQuery, [
         level_id,
-        `Stage ${stageIndex + 1}`, // Adjusting index to match DB format
+        `Stage ${stageIndex}`, // Adjusting index to match DB format
       ]);
 
       if (stageResult.rows.length === 0) {
         return res
           .status(400)
-          .json({ error: `Stage ${stageIndex + 1} not found.` });
+          .json({ error: `Stage ${stageIndex} not found.` });
       }
 
       const stage_id = stageResult.rows[0].stage_id;
 
-      // Insert into stage_completion table
       const stageCompletionQuery = `
         INSERT INTO public.stage_completion (user_id, level_id, stage_id, stage_completed, stage_elapsed_time, level_completion_id)
         VALUES ($1, $2, $3, $4, $5, $6)
@@ -106,5 +105,35 @@ export const saveLevelCompletion = async (req, res) => {
   } catch (error) {
     console.error("Error saving level completion data:", error);
     res.status(500).json({ error: "An error occurred while saving the data." });
+  }
+};
+
+export const saveHint = async (req, res) => {
+  const { username, hintText } = req.body;
+  var uuid = "";
+
+  try {
+    const getUUIDQuery = `SELECT * FROM get_userid_from_username($1)`;
+    const getUUIDResults = await pool.query(getUUIDQuery, [username]);
+    uuid = getUUIDResults.rows[0].uuid;
+    console.log(uuid);
+  } catch (error) {
+    console.error("Error fetching UUID:", error);
+    res.status(500).json({ error: "Error fetching stats from the database." });
+  }
+
+  try {
+    const insertHintQuery = `INSERT INTO public.hints (user_id, timestamp, hint_text) VALUES ($1, $2, $3)`;
+
+    await pool.query(insertHintQuery, [
+      uuid,
+      new Date().toISOString(),
+      hintText,
+    ]);
+
+    res.status(200).json({ message: "Hint data saved successfully!" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json("Database error");
   }
 };

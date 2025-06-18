@@ -121,7 +121,6 @@ const NotificationSlider = () => {
             {notifications.map((notification, index) => (
               <Notification
                 key={index}
-                username={notification.username}
                 message={notification.message}
                 onDismiss={() => handleDismiss(notification.username)}
                 onInspect={() => handleInspect(notification.username)}

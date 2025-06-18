@@ -214,6 +214,7 @@ export default function UserStatsPage() {
 
         {showSummary && (
           <PerformanceSummary
+            summaryType="individual"
             data={statsData}
             onClose={() => setShowSummary(false)}
           />
