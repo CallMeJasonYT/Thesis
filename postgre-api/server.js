@@ -8,9 +8,13 @@ import {
   playersRoutes,
 } from "./routes/index.js"; // Import the routes
 import dotenv from "dotenv";
+import { loadAttributes } from "./init/loadAttributes.js";
+
 dotenv.config();
 
 const app = express();
+
+await loadAttributes();
 
 app.use(cors());
 app.use(json());

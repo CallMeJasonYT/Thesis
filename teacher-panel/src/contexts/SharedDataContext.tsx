@@ -14,7 +14,7 @@ interface FilterState {
 interface SharedData {
   levelStagesMap: Record<string, string[]>;
   groups: { group_name: string }[];
-  statAttributes: { attribute_name: string }[];
+  statAttributes: [];
   filters: FilterState | null;
   setFilters: (filters: FilterState) => void;
   isLoading: boolean;
@@ -36,9 +36,7 @@ export const SharedDataProvider: React.FC<{ children: React.ReactNode }> = ({
     Record<string, string[]>
   >({});
   const [groups, setGroups] = useState<{ group_name: string }[]>([]);
-  const [statAttributes, setStatAttributes] = useState<
-    { attribute_name: string }[]
-  >([]);
+  const [statAttributes, setStatAttributes] = useState<[]>([]);
   const [filters, setFilters] = useState<FilterState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -98,7 +96,7 @@ export const SharedDataProvider: React.FC<{ children: React.ReactNode }> = ({
   // Helper function to initialize default filters
   const initializeDefaultFilters = (
     stages: Record<string, string[]>,
-    attributes: { attribute_name: string }[]
+    attributes: string[]
   ) => {
     const levelNames = Object.keys(stages);
     if (levelNames.length === 0 || attributes.length === 0) return;
@@ -108,7 +106,7 @@ export const SharedDataProvider: React.FC<{ children: React.ReactNode }> = ({
     const initialStages: Record<string, number> = {};
 
     attributes.forEach((stat) => {
-      initialAttributes[stat.attribute_name] = 100;
+      initialAttributes[stat] = 100;
     });
 
     stages[selectedLevel].forEach((stage) => {
@@ -123,7 +121,7 @@ export const SharedDataProvider: React.FC<{ children: React.ReactNode }> = ({
       selectedLevel: selectedLevel,
       startDate: start,
       endDate: today,
-      selectedFilter: attributes[0]?.attribute_name || "",
+      selectedFilter: attributes[0],
       attributeInputs: initialAttributes,
       stageInputs: initialStages,
     });

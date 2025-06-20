@@ -103,12 +103,6 @@ export default function UserStatsPage() {
     setInnerWidth(window.innerWidth);
   }, []);
 
-  // Computed values
-  const statKeys = useMemo(
-    () => statAttributes.map((item) => item.attribute_name),
-    [statAttributes]
-  );
-
   const stageList = useMemo(() => {
     return selectedRoom
       ? levelStagesMap[selectedRoom]
@@ -186,7 +180,7 @@ export default function UserStatsPage() {
       const stagesToShow =
         selectedStage === "Overall" ? [stage] : [selectedStage];
 
-      statKeys.forEach((stat) => {
+      statAttributes.forEach((stat) => {
         if (selectedStat && stat !== selectedStat) return;
 
         stagesToShow.forEach((currentStage) => {
@@ -203,7 +197,7 @@ export default function UserStatsPage() {
       date: entry.date,
       ...averageGroupedValues(entry),
     }));
-  }, [statsData, selectedRoom, statKeys, selectedStat, selectedStage]);
+  }, [statsData, selectedRoom, statAttributes, selectedStat, selectedStage]);
 
   // Create legend data
   const legendData = useMemo(() => {
@@ -222,7 +216,7 @@ export default function UserStatsPage() {
     const users = Array.from(
       new Set(statsData.map(({ username }) => username))
     ).sort();
-    const filteredStats = selectedStat ? [selectedStat] : statKeys;
+    const filteredStats = selectedStat ? [selectedStat] : statAttributes;
     const stagesToShow =
       selectedStage === "Overall" ? stageList : [selectedStage];
 
@@ -308,7 +302,7 @@ export default function UserStatsPage() {
     {
       label: "Stat",
       value: selectedStat,
-      options: statAttributes.map((s) => s.attribute_name),
+      options: statAttributes,
       onChange: setSelectedStat,
     },
   ];

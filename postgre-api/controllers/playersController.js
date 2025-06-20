@@ -1,8 +1,7 @@
-import pool from "../config/db.js";
+import { queryDB } from "../utils/dbHelper.js";
 
 export const getGroupedPlayers = async (req, res) => {
-  try {
-    const groupedPlayersQuery = `
+  const groupedPlayersQuery = `
         SELECT DISTINCT ON (u.uuid) 
            u.username, 
            TO_CHAR(lc.level_timestamp, 'FMMonth DD, YYYY HH12:MI:SS AM') AS last_played, 
@@ -13,12 +12,8 @@ export const getGroupedPlayers = async (req, res) => {
         WHERE u.group_name IS NOT NULL
         ORDER BY u.uuid, lc.level_timestamp DESC`;
 
-    const playerResult = await pool.query(groupedPlayersQuery);
-    res.json({
-      playerData: playerResult.rows,
-    });
-  } catch (error) {
-    console.error("Error fetching player data:", error);
-    res.status(500).json({ error: "Failed to fetch player data" });
-  }
+  const { rows, error } = await queryDB(groupedPlayersQuery);
+
+  if (error) return res.status(500).send("Failed to fetch player data");
+  res.json({ playerData: rows });
 };

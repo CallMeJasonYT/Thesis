@@ -1,3 +1,4 @@
+import { getAttributes } from "../config/attributeCache.js";
 import pool from "../config/db.js";
 
 export const getGroups = async (req, res) => {
@@ -75,14 +76,5 @@ export const getStages = async (req, res) => {
 };*/
 
 export const getStatAttributes = async (req, res) => {
-  try {
-    const stageQuery = `
-    SELECT sa.attribute_name FROM public.stats_attributes sa
-    ORDER BY sa.attribute_name ASC`;
-    const result = await pool.query(stageQuery);
-    res.json({ attributeData: result.rows });
-  } catch (error) {
-    console.error("Error fetching stats attributes:", error);
-    res.status(500).json({ error: "Failed to fetch stats attributes" });
-  }
+  res.json({ attributeData: getAttributes() });
 };

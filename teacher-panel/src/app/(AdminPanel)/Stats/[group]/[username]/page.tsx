@@ -89,10 +89,7 @@ export default function UserStatsPage() {
 
   // Derive keys to display
   const statKeys = useMemo(
-    () =>
-      selectedStat === "Overall"
-        ? statAttributes.map((s) => s.attribute_name)
-        : [selectedStat],
+    () => (selectedStat === "Overall" ? statAttributes : [selectedStat]),
     [selectedStat, statAttributes]
   );
 
@@ -241,10 +238,7 @@ export default function UserStatsPage() {
             {
               label: "Stat",
               value: selectedStat,
-              options: [
-                "Overall",
-                ...statAttributes.map((s) => s.attribute_name),
-              ],
+              options: ["Overall", ...statAttributes],
               onChange: setSelectedStat,
             },
           ].map(({ label, value, options, onChange }) => (

@@ -1,66 +1,68 @@
 import pool from "../config/db.js";
+import { queryDB } from "../utils/dbHelper.js";
+import { validateRequestBody } from "../utils/requirementsValidator.js";
 
 export const validatePlayer = async (req, res) => {
-  const { username, password } = req.body;
-  console.log(req.body);
-
-  try {
-    const result = await pool.query(
-      "SELECT uuid FROM public.users WHERE username = $1 AND password = $2",
-      [username, password]
-    );
-
-    if (result.rows.length > 0) {
-      const uuid = result.rows[0].uuid;
-      console.log(uuid);
-      res.json({ playerUUID: uuid });
-    } else {
-      res.status(401).send("Invalid credentials");
-    }
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Database error");
+  const requiredFields = ["username", "password"];
+  const validation = validateRequestBody(req.body, requiredFields);
+  if (!validation.isValid) {
+    return res.status(400).json({ error: validation.message });
   }
+
+  const { username, password } = req.body;
+  const { rows, error } = await queryDB(
+    "SELECT uuid FROM public.users WHERE username = $1 AND password = $2",
+    [username, password]
+  );
+
+  if (error) return res.status(500).send("Database error");
+  if (rows.length === 0) return res.status(401).send("Invalid credentials");
+  res.json({ playerUUID: rows[0].uuid });
 };
 
 export const saveLevelCompletion = async (req, res) => {
-  const { user_id, stage_times, level_name, end_time, elapsed_time } = req.body;
+  const requiredFields = [
+    "user_id",
+    "stage_times",
+    "level_name",
+    "end_time",
+    "elapsed_time",
+  ];
+  const validation = validateRequestBody(req.body, requiredFields);
+  if (!validation.isValid) {
+    return res.status(400).json({ error: validation.message });
+  }
 
-  console.log(req.body);
+  const { user_id, stage_times, level_name, end_time, elapsed_time } = req.body;
   let isLevelCompleted = true;
 
   if (end_time === 0 || stage_times.some((stage) => stage.value === 0)) {
     isLevelCompleted = false;
   }
+  // Fetch level_id based on level_name
+  const { rows: levelRows, error: levelError } = await queryDB(
+    "SELECT level_id FROM public.levels WHERE level_name = $1",
+    [level_name]
+  );
+  if (totalPlayersError || totalGamesError || roomStatsError)
+    return res.status(500).json("Failed to fetch overview data");
+  if (levelRows.length === 0) {
+    return res.status(400).json({ error: "Level not found." });
+  }
+
+  level_id = levelRows[0].level_id;
+
+  const { rows: levelCompletionRows, error: levelCompletionError } =
+    await queryDB(
+      `INSERT INTO public.level_completion (user_id, level_id, level_completed, level_timestamp, total_elapsed_time)
+    VALUES ($1, $2, $3, to_timestamp($4), $5) RETURNING id`,
+      [user_id, level_id, isLevelCompleted, end_time, elapsed_time]
+    );
+
+  const levelCompletionId = levelCompletionRows[0].id;
+  console.log("Level Completion ID:", levelCompletionId);
 
   try {
-    // Fetch level_id based on level_name
-    const levelQuery =
-      "SELECT level_id FROM public.levels WHERE level_name = $1";
-    const levelResult = await pool.query(levelQuery, [level_name]);
-
-    if (levelResult.rows.length === 0) {
-      return res.status(400).json({ error: "Level not found." });
-    }
-
-    const level_id = levelResult.rows[0].level_id;
-
-    // Insert into level_completion table
-    const levelCompletionQuery = `
-      INSERT INTO public.level_completion (user_id, level_id, level_completed, level_timestamp, total_elapsed_time)
-      VALUES ($1, $2, $3, to_timestamp($4), $5) RETURNING id
-    `;
-    const levelCompletionResult = await pool.query(levelCompletionQuery, [
-      user_id,
-      level_id,
-      isLevelCompleted,
-      end_time,
-      elapsed_time,
-    ]);
-
-    const levelCompletionId = levelCompletionResult.rows[0].id;
-    console.log("Level Completion ID:", levelCompletionId);
-
     // Loop through stage_times array (now objects with key-value)
     for (let stageEntry of stage_times) {
       const stageIndex = parseInt(stageEntry.key) + 1; // Convert "key" to an integer
@@ -112,28 +114,27 @@ export const saveHint = async (req, res) => {
   const { username, hintText } = req.body;
   var uuid = "";
 
-  try {
-    const getUUIDQuery = `SELECT * FROM get_userid_from_username($1)`;
-    const getUUIDResults = await pool.query(getUUIDQuery, [username]);
-    uuid = getUUIDResults.rows[0].uuid;
-    console.log(uuid);
-  } catch (error) {
-    console.error("Error fetching UUID:", error);
-    res.status(500).json({ error: "Error fetching stats from the database." });
+  const { rows: uuidRows, error: uuidError } = await queryDB(
+    "SELECT * FROM get_userid_from_username($1)",
+    [username]
+  );
+  if (uuidError) {
+    return res
+      .status(500)
+      .json({ error: "Error getting UUID from the database." });
   }
 
-  try {
-    const insertHintQuery = `INSERT INTO public.hints (user_id, timestamp, hint_text) VALUES ($1, $2, $3)`;
+  uuid = uuidRows[0].uuid;
+  console.log(uuid);
 
-    await pool.query(insertHintQuery, [
-      uuid,
-      new Date().toISOString(),
-      hintText,
-    ]);
+  const { error: hintError } = await queryDB(
+    "INSERT INTO public.hints (user_id, timestamp, hint_text) VALUES ($1, $2, $3)",
+    [uuid, new Date().toISOString(), hintText]
+  );
 
-    res.status(200).json({ message: "Hint data saved successfully!" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json("Database error");
+  if (hintError) {
+    return res
+      .status(500)
+      .json({ error: "Error storing hint to the database." });
   }
 };

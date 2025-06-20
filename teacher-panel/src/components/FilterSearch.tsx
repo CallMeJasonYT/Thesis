@@ -23,7 +23,6 @@ const FilterSearch = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { levelStagesMap, statAttributes, setFilters, filters, isLoading } =
     useSharedData();
-
   const [selectedLevel, setSelectedLevel] = useState("");
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [endDate, setEndDate] = useState<Date>(new Date());
@@ -68,23 +67,20 @@ const FilterSearch = () => {
 
   const renderStatSliders = () =>
     statAttributes.map((stat) => (
-      <div
-        key={stat.attribute_name}
-        className="flex flex-col items-start gap-1 w-full"
-      >
+      <div key={stat} className="flex flex-col items-start gap-1 w-full">
         <label className="text-sm">
-          {stat.attribute_name}: {attributeInputs[stat.attribute_name] ?? 100}%
+          {stat}: {attributeInputs[stat] ?? 100}%
         </label>
         <input
           type="range"
           min="0"
           max="100"
           step="5"
-          value={attributeInputs[stat.attribute_name] ?? 100}
+          value={attributeInputs[stat] ?? 100}
           onChange={(e) =>
             setAttributeInputs((prev) => ({
               ...prev,
-              [stat.attribute_name]: parseInt(e.target.value, 10),
+              stat: parseInt(e.target.value, 10),
             }))
           }
           className="w-full accent-primary"
@@ -177,16 +173,10 @@ const FilterSearch = () => {
                     onChange={(val) => setSelectedFilter(val)}
                   >
                     {statAttributes.map((stat) => (
-                      <div
-                        key={stat.attribute_name}
-                        className="flex gap-1 items-center"
-                      >
-                        <RadioButton
-                          value={stat.attribute_name}
-                          label={stat.attribute_name}
-                        />
+                      <div key={stat} className="flex gap-1 items-center">
+                        <RadioButton value={stat} label={stat} />
                         <SimpleTooltip
-                          content={`Records are sorted based on the ${stat.attribute_name} of the run`}
+                          content={`Records are sorted based on the ${stat} of the run`}
                           side="right"
                         >
                           <IconHelp className="size-4 text-slate-400" />

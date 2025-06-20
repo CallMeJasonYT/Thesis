@@ -79,10 +79,12 @@ const AttributeTooltipContent: React.FC<{
             <span>{value}</span>
           </div>
         ))}
-        <div className="text-xs mt-2 border-t pt-2 text-primary">
-          <span className="font-medium">Score: </span>
-          <span>{score}</span>
-        </div>
+        {score >= 0 ? (
+          <div className="text-xs mt-2 border-t pt-2 text-primary">
+            <span className="font-medium">Score: </span>
+            <span>{score}</span>
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -110,7 +112,8 @@ const RecordsTable: React.FC<LeaderboardProps> = ({ itemsPerPage = 10 }) => {
         );
 
         if (!response.ok) {
-          throw new Error(`Server responded with status: ${response.status}`);
+          const errorData = await response.json();
+          throw new Error(`Error ${response.status}: ${errorData.error}`);
         }
 
         const fetchedData = await response.json();
@@ -147,12 +150,9 @@ const RecordsTable: React.FC<LeaderboardProps> = ({ itemsPerPage = 10 }) => {
             <TableRow className="bg-neutral border-muted">
               <TableHead className="text-center bg-neutral">Username</TableHead>
               <TableHead className="text-center bg-neutral">Date</TableHead>
-              {statAttributes.map((attribute) => (
-                <TableHead
-                  key={attribute.attribute_name}
-                  className="text-center bg-neutral"
-                >
-                  {attribute.attribute_name}
+              {statAttributes.map((stat) => (
+                <TableHead key={stat} className="text-center bg-neutral">
+                  {stat}
                 </TableHead>
               ))}
             </TableRow>
@@ -170,25 +170,25 @@ const RecordsTable: React.FC<LeaderboardProps> = ({ itemsPerPage = 10 }) => {
                     {record.username}
                   </TableCell>
                   <TableCell className="text-center">{record.date}</TableCell>
-                  {statAttributes.map((attribute) => {
-                    const attributeValue =
-                      record.attributes?.[attribute.attribute_name];
+                  {statAttributes.map((stat) => {
+                    const attributeValue = record.attributes?.[stat];
                     const displayValue = attributeValue?.Sum ?? "-";
 
                     return (
-                      <TableCell
-                        key={attribute.attribute_name}
-                        className="text-center"
-                      >
+                      <TableCell key={stat} className="text-center">
                         {attributeValue &&
                         typeof attributeValue === "object" &&
                         "Sum" in attributeValue ? (
                           <SimpleTooltip
                             content={
                               <AttributeTooltipContent
-                                attributeName={attribute.attribute_name}
+                                attributeName={stat}
                                 attributeValue={attributeValue}
-                                score={record.score}
+                                score={
+                                  filters?.selectedFilter === "advanced"
+                                    ? record.score
+                                    : -1
+                                }
                               />
                             }
                             side="top"
