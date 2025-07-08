@@ -106,7 +106,8 @@ export default function UserStatsPage() {
     const fetchStats = async () => {
       try {
         const res = await fetch(
-          `http://${process.env.NEXT_PUBLIC_SERVER_IP}:${process.env.NEXT_PUBLIC_DB_API_PORT}/api/web/userStats`,
+          //`http://${process.env.NEXT_PUBLIC_SERVER_IP}:${process.env.NEXT_PUBLIC_DB_API_PORT}/api/web/userStats`,
+          `http://${process.env.NEXT_PUBLIC_SERVER_IP}:${process.env.NEXT_PUBLIC_DB_API_PORT}/api/ariadni/QuizTimes`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -114,8 +115,8 @@ export default function UserStatsPage() {
               startDate: startDate.toISOString(),
               endDate: endDate.toISOString(),
               username: user,
-              level: selectedRoom,
-              stage: selectedStage,
+              //level: selectedRoom,
+              //stage: selectedStage,
             }),
           }
         );
@@ -231,7 +232,9 @@ export default function UserStatsPage() {
               value: selectedStage,
               options: [
                 "Overall",
-                ...Array.from(new Set(Object.values(levelStagesMap).flat())),
+                ...(selectedRoom === "Overall"
+                  ? Array.from(new Set(Object.values(levelStagesMap).flat()))
+                  : levelStagesMap[selectedRoom] || []),
               ],
               onChange: setSelectedStage,
             },

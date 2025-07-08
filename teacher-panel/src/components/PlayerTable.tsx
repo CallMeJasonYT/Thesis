@@ -31,8 +31,8 @@ import {
 import { Button } from "./ui/button";
 
 interface User {
-  Username: string;
-  lastPlayed: string;
+  username: string;
+  last_played: string;
 }
 
 interface PlayerTableProps {
@@ -41,67 +41,75 @@ interface PlayerTableProps {
 
 const PlayerTable: React.FC<PlayerTableProps> = ({ itemsPerPage = 10 }) => {
   const router = useRouter();
-  const { groups } = useSharedData();
-  const [selectedGroup, setSelectedGroup] = useState<string>("");
-  const [groupedPlayers, setGroupedPlayers] = useState<Record<string, User[]>>(
+  //const { groups } = useSharedData();
+  //const [selectedGroup, setSelectedGroup] = useState<string>("");
+  /*const [groupedPlayers, setGroupedPlayers] = useState<Record<string, User[]>>(
     {}
-  );
+  );*/
+  const [players, setPlayers] = useState<User[]>();
   const [currentPage, setCurrentPage] = useState<number>(1);
 
-  useEffect(() => {
+  /*useEffect(() => {
     if (groups.length > 0) {
       setSelectedGroup(groups[0].group_name);
     }
-  }, [groups]);
+  }, [groups]);*/
 
-  useEffect(() => {
-    if (!selectedGroup) return;
+  useEffect(
+    () => {
+      //if (!selectedGroup) return;
 
-    (async () => {
-      try {
-        const res = await fetch(
-          `http://${process.env.NEXT_PUBLIC_SERVER_IP}:${process.env.NEXT_PUBLIC_DB_API_PORT}/api/web/getGroupedPlayers`
-        );
-        const json = await res.json();
-        const playersByGroup: Record<string, User[]> = {};
+      (async () => {
+        try {
+          const res = await fetch(
+            /*`http://${process.env.NEXT_PUBLIC_SERVER_IP}:${process.env.NEXT_PUBLIC_DB_API_PORT}/api/web/getGroupedPlayers`*/
+            `http://${process.env.NEXT_PUBLIC_SERVER_IP}:${process.env.NEXT_PUBLIC_DB_API_PORT}/api/ariadni/players`
+          );
+          const json = await res.json();
+          /*const playersByGroup: Record<string, User[]> = {};
 
         json.playerData.forEach((p: any) => {
           if (!playersByGroup[p.group_name]) playersByGroup[p.group_name] = [];
           playersByGroup[p.group_name].push({
-            Username: p.username,
-            lastPlayed: p.last_played,
+            username: p.username,
+            last_played: p.last_played,
           });
-        });
+        });*/
+          setPlayers(json.playerData);
+          //setGroupedPlayers(/*playersByGroup*/);
+          setCurrentPage(1);
+        } catch (e) {
+          console.error("Error fetching data:", e);
+        }
+      })();
+    },
+    [
+      /*selectedGroup*/
+    ]
+  );
 
-        setGroupedPlayers(playersByGroup);
-        setCurrentPage(1);
-      } catch (e) {
-        console.error("Error fetching data:", e);
-      }
-    })();
-  }, [selectedGroup]);
-
-  const users = groupedPlayers[selectedGroup] || [];
+  const users = players /*groupedPlayers[selectedGroup]*/ || [];
   const pageCount = Math.ceil(users.length / itemsPerPage);
   const start = (currentPage - 1) * itemsPerPage;
   const paginatedUsers = users.slice(start, start + itemsPerPage);
+  console.log(users);
 
   const goToPage = (page: number) => {
     if (page < 1 || page > pageCount) return;
     setCurrentPage(page);
   };
 
-  const handleGroupStats = () => {
+  /*const handleGroupStats = () => {
     router.push(`/Stats/${selectedGroup}`);
-  };
+  };*/
 
   const handleUserStats = (username: string) => {
-    router.push(`/Stats/${selectedGroup}/${username}`);
+    router.push(`/Stats/${"a" /*selectedGroup*/}/${username}`);
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-4 items-center">
+      {/*<div className="flex flex-wrap gap-4 items-center">
         <label className=" font-semibold text-lg">Select Group:</label>
         <Select
           value={selectedGroup}
@@ -120,7 +128,7 @@ const PlayerTable: React.FC<PlayerTableProps> = ({ itemsPerPage = 10 }) => {
           </SelectContent>
         </Select>
         <Button onClick={handleGroupStats}>Show Group Stats</Button>
-      </div>
+      </div>*/}
 
       <div className="border shadow-lg rounded-2xl">
         <Table className="w-full overflow-x-auto">
@@ -134,17 +142,17 @@ const PlayerTable: React.FC<PlayerTableProps> = ({ itemsPerPage = 10 }) => {
           <TableBody>
             {paginatedUsers.length ? (
               paginatedUsers.map((u) => (
-                <TableRow key={u.Username} className="hover:bg-neutral">
-                  <TableCell className="text-center">{u.Username}</TableCell>
-                  <TableCell className="text-center">{u.lastPlayed}</TableCell>
+                <TableRow key={u.username} className="hover:bg-neutral">
+                  <TableCell className="text-center">{u.username}</TableCell>
+                  <TableCell className="text-center">{u.last_played}</TableCell>
                   <TableCell className="flex justify-end">
                     <SimpleTooltip
-                      content={`View stats for ${u.Username}`}
+                      content={`View stats for ${u.username}`}
                       side="top"
                     >
                       <IconDeviceDesktopAnalytics
                         className="w-6 h-6 text-secondary cursor-pointer"
-                        onClick={() => handleUserStats(u.Username)}
+                        onClick={() => handleUserStats(u.username)}
                       />
                     </SimpleTooltip>
                   </TableCell>
