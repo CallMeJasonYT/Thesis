@@ -16,7 +16,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "motion": "^12.12.1",
-    "next": "^15.2.3",
+    "next": "^15.3.3",
     "openai": "^4.100.0",
     "react": "^19.0.0",
     "react-datepicker": "^8.2.0",
