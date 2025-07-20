@@ -26,10 +26,9 @@ import { PerformanceSummary } from "@/components/performanceSummary";
 import { motion } from "framer-motion";
 
 interface StatsEntry {
-  room: string;
-  stage: string;
-  date: string;
+  quiz: string;
   username: string;
+  date: string;
   attributes: Record<string, number>;
 }
 
@@ -77,7 +76,7 @@ export default function UserStatsPage() {
   const [startDate, setStartDate] = useState<Date>(defaultStart);
   const [endDate, setEndDate] = useState<Date>(today);
   const [selectedRoom, setSelectedRoom] = useState<string>("Overall");
-  const [selectedStage, setSelectedStage] = useState<string>("Overall");
+  const [selectedQuiz, setSelectedQuiz] = useState<string>("Overall");
   const [selectedStat, setSelectedStat] = useState<string>("Overall");
   const [statsData, setStatsData] = useState<StatsEntry[]>([]);
   const [showSummary, setShowSummary] = useState(false);
@@ -98,15 +97,14 @@ export default function UserStatsPage() {
       selectedRoom === "Overall"
         ? Array.from(new Set(Object.values(levelStagesMap).flat()))
         : levelStagesMap[selectedRoom] || [];
-    return selectedStage === "Overall" ? allStages : [selectedStage];
-  }, [selectedRoom, selectedStage, levelStagesMap]);
+    return selectedQuiz === "Overall" ? allStages : [selectedQuiz];
+  }, [selectedRoom, selectedQuiz, levelStagesMap]);
 
   // Fetch stats on filters change
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const res = await fetch(
-          //`http://${process.env.NEXT_PUBLIC_SERVER_IP}:${process.env.NEXT_PUBLIC_DB_API_PORT}/api/web/userStats`,
           `http://${process.env.NEXT_PUBLIC_SERVER_IP}:${process.env.NEXT_PUBLIC_DB_API_PORT}/api/ariadni/QuizTimes`,
           {
             method: "POST",
@@ -115,8 +113,7 @@ export default function UserStatsPage() {
               startDate: startDate.toISOString(),
               endDate: endDate.toISOString(),
               username: user,
-              //level: selectedRoom,
-              //stage: selectedStage,
+              quizName: selectedQuiz,
             }),
           }
         );
@@ -124,10 +121,9 @@ export default function UserStatsPage() {
         console.log(json);
         setStatsData(
           json.userResults.map((e: any) => ({
-            room: e.level_name,
-            stage: e.stage_name,
-            date: e.date,
+            quiz: e.quiz_name,
             username: e.username,
+            date: e.date,
             attributes: e.attributes,
           }))
         );
@@ -137,36 +133,23 @@ export default function UserStatsPage() {
     };
 
     fetchStats();
-  }, [startDate, endDate, selectedRoom, selectedStage, selectedStat, user]);
+  }, [startDate, endDate, selectedRoom, selectedQuiz, selectedStat, user]);
 
-  // Transform data for chart
   const chartData = useMemo(() => {
-    const grouped = new Map<string, any>();
-    const levels =
-      selectedRoom === "Overall" ? Object.keys(levelStagesMap) : [selectedRoom];
+    return statsData.map(({ date, quiz, attributes }) => {
+      const entry: Record<string, number | string> = {
+        label: `${quiz} - ${date}`,
+      };
 
-    statsData.forEach(({ date, room, stage, attributes }) => {
-      if (!levels.includes(room) || !stageList.includes(stage)) return;
-      const key = `${date}-${room}`;
-      if (!grouped.has(key)) grouped.set(key, { date, level: room });
-      const entry = grouped.get(key);
       statKeys.forEach((stat) => {
-        const label = `${stat} ${stage}`;
-        if (!entry[label]) entry[label] = [];
-        const val = attributes[stat];
-        if (typeof val === "number") entry[label].push(val);
+        entry[stat] = attributes[stat];
       });
-    });
 
-    return Array.from(grouped.values())
-      .map((d: any) => ({
-        date: d.date,
-        level: d.level,
-        label: `${d.level} (${d.date})`,
-        ...averageGroupedValues(d),
-      }))
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [statsData, selectedRoom, statKeys, stageList, levelStagesMap]);
+      return entry;
+    });
+  }, [statsData, statKeys]);
+
+  console.log(chartData);
 
   // Predefined bar colors
   const barColors = useMemo(
@@ -175,16 +158,14 @@ export default function UserStatsPage() {
   );
 
   const renderBars = () =>
-    statKeys.flatMap((stat, si) =>
-      stageList.map((stage, sj) => (
-        <Bar
-          key={`${stat}-${stage}`}
-          dataKey={`${stat} ${stage}`}
-          stackId={selectedStat === "Overall" ? stat : "a"}
-          fill={barColors[(si * stageList.length + sj) % barColors.length]}
-        />
-      ))
-    );
+    statKeys.map((stat, si) => (
+      <Bar
+        key={stat}
+        dataKey={stat}
+        stackId={selectedStat === "Overall" ? stat : "a"}
+        fill={barColors[si % barColors.length]}
+      />
+    ));
 
   return (
     <motion.div
@@ -200,7 +181,7 @@ export default function UserStatsPage() {
 
       <div className="p-6 bg-neutral rounded-lg shadow-md">
         <div className="flex justify-between items-center mb-4 gap-2">
-          <h2 className="md:text-xl font-bold">Level Stats</h2>
+          <h2 className="md:text-xl font-bold">Quiz Stats</h2>
           <button
             onClick={() => statsData.length && setShowSummary(true)}
             className="p-0.5 text-sm bg-light text-light-foreground font-semibold border-2 border-border rounded-2xl flex items-center gap-2 md:p-1 hover:border-primary transition cursor-pointer"
@@ -222,21 +203,21 @@ export default function UserStatsPage() {
         <div className="flex flex-wrap items-center gap-4 mb-6">
           {[
             {
-              label: "Level",
+              label: "Room",
               value: selectedRoom,
               options: ["Overall", ...Object.keys(levelStagesMap)],
               onChange: setSelectedRoom,
             },
             {
-              label: "Stage",
-              value: selectedStage,
+              label: "Quiz",
+              value: selectedQuiz,
               options: [
                 "Overall",
                 ...(selectedRoom === "Overall"
                   ? Array.from(new Set(Object.values(levelStagesMap).flat()))
                   : levelStagesMap[selectedRoom] || []),
               ],
-              onChange: setSelectedStage,
+              onChange: setSelectedQuiz,
             },
             {
               label: "Stat",
@@ -251,7 +232,7 @@ export default function UserStatsPage() {
             >
               <label className="font-bold">Select {label}:</label>
               <Select value={value} onValueChange={onChange}>
-                <SelectTrigger className="bg-neutral  border-border rounded-2xl">
+                <SelectTrigger className="bg-neutral border-border rounded-2xl">
                   <SelectValue placeholder={`Select ${label}`} />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-800 ">
@@ -301,13 +282,12 @@ export default function UserStatsPage() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} barCategoryGap="30%">
                 <CartesianGrid strokeDasharray="3 3" />
-                {innerWidth > 800 ? <XAxis dataKey="label" interval={0} /> : ""}
                 <YAxis width={40} />
+                <XAxis dataKey="label" className="hidden" />
                 <RechartsTooltip
                   content={<CustomTooltip />}
                   cursor={{ fill: "transparent" }}
                 />
-                {innerWidth > 500 ? <Legend className="hidden sm:block" /> : ""}
                 {renderBars()}
               </BarChart>
             </ResponsiveContainer>

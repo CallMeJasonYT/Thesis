@@ -7,8 +7,7 @@ import { IconCheck, IconCopy, IconX } from "@tabler/icons-react";
 import { motion } from "framer-motion";
 
 interface PerformanceEntry {
-  room: string;
-  stage: string;
+  quiz: string;
   date: string;
   username: string;
   attributes: Record<string, number>;
@@ -21,33 +20,19 @@ interface PerformanceSummaryProps {
 }
 
 // Define thresholds for rooms (optional and flexible)
-const thresholds: Record<string, Record<string, Record<string, number>>> = {
-  Tutorial: {
-    "Stage 1": { Mistakes: 4, "Total Time": 30 },
-    "Stage 2": { Mistakes: 5, "Total Time": 30 },
-    "Stage 3": { Mistakes: 1, "Total Time": 20 },
-    "Stage 4": { Mistakes: 5, "Total Time": 60 },
+const thresholds: Record<string, Record<string, number>> = {
+  "Επιχειρηματικότητα Quiz": {
+    Mistakes: 4,
+    "Normal NPC Assistance": 5,
+    "AI NPC Assistance": 5,
   },
 };
 
 function generatePrompt(data: PerformanceEntry[], type: string): string {
-  const grouped: Record<
-    string,
-    Record<string, Record<string, Record<string, number>>>
-  > = {};
-
-  data.forEach((entry) => {
-    if (!grouped[entry.date]) grouped[entry.date] = {};
-    if (!grouped[entry.date][entry.room]) grouped[entry.date][entry.room] = {};
-    grouped[entry.date][entry.room][entry.stage] = entry.attributes;
-  });
-
   const lines: string[] = [];
 
   lines.push(
-    `You are an AI tool that summarizes students performances in a ` +
-      type +
-      ` level in an educational game that uses sorting alogirthms to solve puzzles.`
+    `You are an AI tool that summarizes students' performances in a ${type} level in an educational game that uses sorting algorithms to solve puzzles.`
   );
 
   data.forEach((entry) => {
@@ -55,24 +40,15 @@ function generatePrompt(data: PerformanceEntry[], type: string): string {
     lines.push(`Student Information`);
     lines.push(`========================`);
     lines.push(`Username: ${entry.username}`);
+    lines.push(`Quiz: ${entry.quiz}`);
+    lines.push(`Date: ${entry.date}`);
 
     lines.push(`\n========================`);
     lines.push(`Performance Data`);
     lines.push(`========================`);
 
-    for (const [date, rooms] of Object.entries(grouped)) {
-      lines.push(`Date: ${date}`);
-      for (const [room, stages] of Object.entries(rooms)) {
-        lines.push(`  Room: ${room}`);
-        for (const [stage, attrs] of Object.entries(stages)) {
-          const attrStrings = Object.entries(attrs).map(
-            ([key, value]) =>
-              `    - ${key}: ${value}${key.includes("Time") ? "s" : ""}`
-          );
-          lines.push(`    Stage: ${stage}`);
-          lines.push(...attrStrings);
-        }
-      }
+    for (const [key, value] of Object.entries(entry.attributes)) {
+      lines.push(`  - ${key}: ${value}${key.includes("Time") ? "s" : ""}`);
     }
   });
 
@@ -83,22 +59,11 @@ function generatePrompt(data: PerformanceEntry[], type: string): string {
   if (Object.keys(thresholds).length === 0) {
     lines.push("None provided.");
   } else {
-    for (const [room, stages] of Object.entries(thresholds)) {
-      lines.push(`Room: ${room}`);
-      for (const [stage, attrs] of Object.entries(stages)) {
-        lines.push(`  Stage: ${stage}`);
-        const parts = Object.entries(attrs).map(
-          ([k, v]) => `    - ${k}: ${v}${k.includes("Time") ? "s" : ""}`
-        );
-        lines.push(...parts);
+    for (const [quiz, attrs] of Object.entries(thresholds)) {
+      lines.push(`Quiz: ${quiz}`);
+      for (const [k, v] of Object.entries(attrs)) {
+        lines.push(`  - ${k}: ${v}${k.includes("Time") ? "s" : ""}`);
       }
-    }
-
-    if (!thresholds["Training"]) {
-      lines.push(`Room: Training`);
-      lines.push(
-        `  - No thresholds since it's training, so just give basic feedback.`
-      );
     }
   }
 
@@ -106,9 +71,7 @@ function generatePrompt(data: PerformanceEntry[], type: string): string {
   lines.push(`Instructions`);
   lines.push(`========================`);
   lines.push(
-    `Generate a paragraph that has line-breaks in order to look good. I don't want you to use ** for emphasis. Summarize the performance of the ` +
-      type +
-      ` for the teacher. Indicate if they performed well, struggled, or exceeded thresholds. Mention where they made progress or regressed. Also make sure to give some advice for the next steps for the student.`
+    `Generate a paragraph with line breaks so it's visually readable. Avoid using ** for emphasis. Summarize the performance of the ${type} for the teacher. Indicate if the student performed well, struggled, or exceeded thresholds. Mention where they made progress or regressed. Also, give advice on what to work on next.`
   );
 
   return lines.join("\n");

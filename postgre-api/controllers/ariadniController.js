@@ -1,5 +1,6 @@
 import { queryDB } from "../utils/dbHelper.js";
 import { validateRequestBody } from "../utils/requirementsValidator.js";
+import { getAttributes } from "../config/attributeCache.js";
 
 export const getUsers = async (req, res) => {
   const usersQuery = `
@@ -70,7 +71,7 @@ const getSessionsByUser = async (startDate, endDate, username) => {
 };
 
 export const getQuizTimes = async (req, res) => {
-  const requiredFields = ["startDate", "endDate", "username"];
+  const requiredFields = ["startDate", "endDate", "username", "quizName"];
   const validation = validateRequestBody(req.body, requiredFields);
 
   if (!validation.isValid) {
@@ -78,27 +79,29 @@ export const getQuizTimes = async (req, res) => {
     return res.status(400).json({ error: validation.message });
   }
 
-  const { startDate, endDate, username } = req.body;
+  const { startDate, endDate, username, quizName } = req.body;
   const startDateISO = new Date(startDate).toISOString();
   const endDateISO = new Date(endDate).toISOString();
 
   const sessions = await getSessionsByUser(startDateISO, endDateISO, username);
-
   const quizResults = [];
 
   for (const sessionId of sessions) {
     const quizTimesQuery = `
-    SELECT session_id, MIN(created_at) AS first_created_at, quiz_id
-    FROM public.logs l
-    WHERE l.session_id = $1
-      AND l.type = 'quiz-start'
-      AND l.created_at BETWEEN $2 AND $3
-    GROUP BY quiz_id, session_id`;
+      SELECT session_id, MIN(l.created_at) AS first_created_at, quiz_id, q.name
+      FROM public.logs l
+      INNER JOIN public.quizzes q ON q.id = l.quiz_id
+      WHERE l.session_id = $1
+        AND l.type = 'quiz-start'
+        AND l.created_at BETWEEN $2 AND $3
+        AND ($4 = 'Overall' OR q.name = $4)
+      GROUP BY quiz_id, session_id, q.name`;
 
     const { rows, error } = await queryDB(quizTimesQuery, [
       sessionId,
       startDateISO,
       endDateISO,
+      quizName,
     ]);
 
     if (error) {
@@ -108,15 +111,13 @@ export const getQuizTimes = async (req, res) => {
 
     quizResults.push(...rows);
   }
-  console.log(quizResults);
 
-  // Group quizResults by session_id
   const groupedBySession = {};
 
   for (const item of quizResults) {
-    const { session_id, first_created_at } = item;
+    const { session_id, first_created_at, name } = item;
     if (!groupedBySession[session_id]) groupedBySession[session_id] = [];
-    groupedBySession[session_id].push(item);
+    groupedBySession[session_id].push({ ...item, quiz_name: name });
   }
 
   const logsBetweenPairs = [];
@@ -130,28 +131,26 @@ export const getQuizTimes = async (req, res) => {
       const start = quizzes[i].first_created_at;
       let end;
 
-      // If it's the last quiz-start log for the session fetch the logs up to 20 mins after the quiz started
       if (i != quizzes.length - 1) {
         end = quizzes[i + 1].first_created_at;
       } else {
         end = new Date(
-          quizzes[i].first_created_at.getTime() + 20 * 60 * 1000
+          new Date(quizzes[i].first_created_at).getTime() + 20 * 60 * 1000
         ).toISOString();
       }
 
-      // Fetch all the logs
       const logsQuery = `
-      SELECT *
-      FROM public.logs
-      WHERE session_id = $1
-        AND created_at BETWEEN $2 AND $3
-      ORDER BY created_at
-    `;
+        SELECT *
+        FROM public.logs
+        WHERE session_id = $1
+          AND created_at BETWEEN $2 AND $3
+        ORDER BY created_at
+      `;
 
       const { rows, error } = await queryDB(logsQuery, [sessionId, start, end]);
 
       if (error) {
-        console.error(`Error fetching logs for session ${sessionId}`);
+        console.error(`Error fetching logs for session ${sessionId}`, error);
         continue;
       }
 
@@ -160,6 +159,7 @@ export const getQuizTimes = async (req, res) => {
         start,
         end,
         logs: rows,
+        quiz_name: quizzes[i].quiz_name,
       });
     }
   }
@@ -171,7 +171,6 @@ export const getQuizTimes = async (req, res) => {
     const answerIds = [];
 
     for (const log of item.logs) {
-      // Check for those three types of messages in order to identify NPC Usage and Quiz Submitted Answers
       if (log.type === "npc-normal-selected-option") {
         npcCounts.normal += 1;
       } else if (log.type === "npc-ai-sent-message") {
@@ -186,16 +185,12 @@ export const getQuizTimes = async (req, res) => {
 
     if (answerIds.length > 0) {
       const placeholders = answerIds.map((_, i) => `$${i + 1}`).join(", ");
-      console.log(placeholders);
-      console.log(answerIds);
-
-      // Query in order to fetch each Quiz Total Score and Mistakes
       const scoreQuery = `
-      SELECT
-        SUM(points) AS total_score,
-        COUNT(*) FILTER (WHERE points <= 0) AS mistake_count
-      FROM public.session_answers
-      WHERE id IN (${placeholders})
+        SELECT
+          SUM(points) AS total_score,
+          COUNT(*) FILTER (WHERE points <= 0) AS mistake_count
+        FROM public.session_answers
+        WHERE id IN (${placeholders})
       `;
 
       const { rows: scoreRows, error: scoreError } = await queryDB(
@@ -214,14 +209,27 @@ export const getQuizTimes = async (req, res) => {
       }
     }
 
-    // Connect every piece of data into the Response Object
+    const attributeMapping = {
+      "AI NPC Usage": npcCounts.ai,
+      Mistakes: mistakes,
+      "NPC Usage": npcCounts.normal,
+      Score: quizScore,
+    };
+
+    const attributesObj = getAttributes().reduce((acc, key) => {
+      acc[key] = parseFloat(attributeMapping[key]) || 0;
+      return acc;
+    }, {});
+
     responseData.push({
-      ...item,
-      npcInteractionCounts: npcCounts,
-      quizScore,
-      mistakes,
+      session_id: item.session_id,
+      quiz_name: item.quiz_name,
+      date: new Date(item.start).toISOString().split("T")[0],
+      username: username,
+      attributes: attributesObj,
+      logs: item.logs,
     });
   }
 
-  res.json({ data: responseData });
+  res.json({ userResults: responseData });
 };
