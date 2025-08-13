@@ -1,4 +1,5 @@
 import { getAttributes } from "../config/attributeCache.js";
+import { queryDB } from "../utils/dbHelper.js";
 
 export const getGroups = async (req, res) => {
   const { rows, error } = await queryDB(
