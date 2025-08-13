@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import StatsCard from "@/components/StatsCard";
-import { useWebSocket } from "@/contexts/WebSocketContext";
 import { useSharedData } from "@/contexts/SharedDataContext";
 import {
   IconCheck,
@@ -16,18 +15,14 @@ import {
 
 const OverviewStatsCards = () => {
   const { levelStagesMap } = useSharedData();
-  const levels = Object.keys(levelStagesMap);
-  const { sendMessage, addListener, removeListener, isConnected } =
-    useWebSocket();
+  const quizzes = Object.values(levelStagesMap).flat();
   const [stats, setStats] = useState<any>(null);
-  const [onlinePlayers, setOnlinePlayers] = useState(0);
-  const [activeRooms, setActiveRooms] = useState(0);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const response = await fetch(
-          `http://${process.env.NEXT_PUBLIC_SERVER_IP}:${process.env.NEXT_PUBLIC_DB_API_PORT}/api/web/overviewStats`
+          `http://${process.env.NEXT_PUBLIC_SERVER_IP}:${process.env.NEXT_PUBLIC_DB_API_PORT}/api/ariadni/overviewStats`
         );
         const data = await response.json();
         console.log("Fetched Stats:", data);
@@ -39,36 +34,13 @@ const OverviewStatsCards = () => {
     fetchStats();
   }, []);
 
-  useEffect(() => {
-    const handleOnlinePlayers = (data: { count: number }) => {
-      setOnlinePlayers(data.count);
-    };
-
-    const handleActiveRooms = (data: { rooms: Record<string, any> }) => {
-      setActiveRooms(Object.keys(data.rooms).length);
-    };
-
-    addListener("online-players-response", handleOnlinePlayers);
-    addListener("active-rooms-response", handleActiveRooms);
-
-    if (isConnected) {
-      sendMessage({ type: "online-players-request" });
-      sendMessage({ type: "active-rooms-request" });
-    }
-
-    return () => {
-      removeListener("online-players-response", handleOnlinePlayers);
-      removeListener("active-rooms-response", handleActiveRooms);
-    };
-  }, [addListener, removeListener, sendMessage, isConnected]);
-
-  if (!stats || !isConnected) {
+  if (!stats) {
     return <div>Loading...</div>;
   }
 
   return (
     <div className="space-y-4 md:space-y-8">
-      <div className="grid gap-4 md:gap-3 lg:gap-6 sm:grid-cols-2">
+      <div className="grid gap-4 md:gap-3 lg:gap-6">
         <StatsCard
           title="Player Status"
           stats={[
@@ -78,62 +50,35 @@ const OverviewStatsCards = () => {
               icon: <IconUser className="text-secondary" />,
             },
             {
-              label: "Online Players",
-              value: onlinePlayers,
+              label: "Total Sessions",
+              value: stats.totalSessions,
               icon: <IconWifi className="text-emerald-800" />,
-            },
-          ]}
-          colorClass="text-primary"
-        />
-
-        <StatsCard
-          title="Games Status"
-          stats={[
-            {
-              label: "Total Games",
-              value: stats.totalRooms,
-              icon: <IconDeviceGamepad2 className="text-secondary" />,
-            },
-            {
-              label: "Active Games",
-              value: activeRooms,
-              icon: <IconBolt className="text-emerald-800" />,
             },
           ]}
           colorClass="text-primary"
         />
       </div>
 
-      <div className="grid gap-4 md:gap-3 lg:gap-6 sm:grid-cols-3">
-        {levels.map((level: string) => (
+      <div className="grid gap-4 md:gap-3 lg:gap-6 sm:grid-cols-2">
+        {quizzes.map((quiz: string) => (
           <StatsCard
-            key={level}
-            title={level}
+            key={quiz}
+            title={quiz}
             stats={[
               {
                 label: "Total Players Played",
                 value:
-                  stats?.roomStats.find(
-                    (stat: any) => stat.level_name === level
-                  )?.total_players ?? "N/A",
+                  stats?.quizStats.find((stat: any) => stat.quiz_name === quiz)
+                    ?.times_played ?? "N/A",
                 icon: <IconLogin2 className="text-tertiary" />,
               },
               {
-                label: "Completion Rate",
+                label: "Average Score",
                 value: `${
-                  stats?.roomStats.find(
-                    (stat: any) => stat.level_name === level
-                  )?.completion_rate ?? "N/A"
-                }%`,
+                  stats?.quizStats.find((stat: any) => stat.quiz_name === quiz)
+                    ?.avg_points ?? "N/A"
+                }`,
                 icon: <IconCheck className="text-primary" />,
-              },
-              {
-                label: "Average Completion Time (s)",
-                value:
-                  stats?.roomStats.find(
-                    (stat: any) => stat.level_name === level
-                  )?.avg_time ?? "N/A",
-                icon: <IconStopwatch className="text-secondary" />,
               },
             ]}
             colorClass="text-secondary"

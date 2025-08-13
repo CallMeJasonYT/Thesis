@@ -22,9 +22,16 @@ interface PerformanceSummaryProps {
 // Define thresholds for rooms (optional and flexible)
 const thresholds: Record<string, Record<string, number>> = {
   "Επιχειρηματικότητα Quiz": {
-    Mistakes: 4,
-    "Normal NPC Assistance": 5,
-    "AI NPC Assistance": 5,
+    Score: 60,
+  },
+  "Βασικές Αρχές Επιχειρηματικού Σχεδίου Quiz": {
+    Score: 60,
+  },
+  "Βασικές αρχές Επιχειρηματικού Σχεδίου Επαναληπτικό Quiz": {
+    Score: 60,
+  },
+  "Τελικό Quiz": {
+    Score: 60,
   },
 };
 
@@ -32,7 +39,9 @@ function generatePrompt(data: PerformanceEntry[], type: string): string {
   const lines: string[] = [];
 
   lines.push(
-    `You are an AI tool that summarizes students' performances in a ${type} level in an educational game that uses sorting algorithms to solve puzzles.`
+    `You are an AI tool that summarizes students' performances in a ${type} 
+    level in an educational game. This game provides lectures in slides about business.
+    Students are then called to solve quizzes that check their knowledge in those slides.`
   );
 
   data.forEach((entry) => {
@@ -46,7 +55,6 @@ function generatePrompt(data: PerformanceEntry[], type: string): string {
     lines.push(`\n========================`);
     lines.push(`Performance Data`);
     lines.push(`========================`);
-
     for (const [key, value] of Object.entries(entry.attributes)) {
       lines.push(`  - ${key}: ${value}${key.includes("Time") ? "s" : ""}`);
     }
@@ -62,7 +70,7 @@ function generatePrompt(data: PerformanceEntry[], type: string): string {
     for (const [quiz, attrs] of Object.entries(thresholds)) {
       lines.push(`Quiz: ${quiz}`);
       for (const [k, v] of Object.entries(attrs)) {
-        lines.push(`  - ${k}: ${v}${k.includes("Time") ? "s" : ""}`);
+        lines.push(`  - ${k}: ${v}`);
       }
     }
   }
@@ -71,7 +79,12 @@ function generatePrompt(data: PerformanceEntry[], type: string): string {
   lines.push(`Instructions`);
   lines.push(`========================`);
   lines.push(
-    `Generate a paragraph with line breaks so it's visually readable. Avoid using ** for emphasis. Summarize the performance of the ${type} for the teacher. Indicate if the student performed well, struggled, or exceeded thresholds. Mention where they made progress or regressed. Also, give advice on what to work on next.`
+    `Generate a paragraph with line breaks so it's visually readable. 
+    Avoid using ** for emphasis. Summarize the performance of the ${type} for the teacher. 
+    Indicate if the student performed well, struggled, or exceeded thresholds. 
+    Mention where they made progress or regressed. Also, give advice on what to work on next.
+    Mostly focus whether the usage of AI NPCs or Normal NPCs helped him score higher.
+    Last but not least, please comment on all the data that I give you, for example all the quizzes with their names.`
   );
 
   return lines.join("\n");

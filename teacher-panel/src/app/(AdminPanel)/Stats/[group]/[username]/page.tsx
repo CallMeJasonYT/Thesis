@@ -149,8 +149,6 @@ export default function UserStatsPage() {
     });
   }, [statsData, statKeys]);
 
-  console.log(chartData);
-
   // Predefined bar colors
   const barColors = useMemo(
     () => ["#8884d8", "#82ca9d", "#ffc658", "#089887", "#f06c9b"],

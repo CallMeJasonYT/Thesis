@@ -12,7 +12,7 @@ export async function fetchChatgptResponse(prompt: string): Promise<string> {
       model: "gpt-4o-mini",
       store: true,
       messages: [{ role: "user", content: prompt }],
-      max_completion_tokens: 300,
+      max_completion_tokens: 500,
     });
 
     return completion.choices[0].message.content ?? "No content.";

@@ -233,3 +233,59 @@ export const getQuizTimes = async (req, res) => {
 
   res.json({ userResults: responseData });
 };
+
+export const getOverviewStats = async (req, res) => {
+  const quizStatsQuery = `
+    SELECT
+      qz.name AS quiz_name,
+      COALESCE(COUNT(DISTINCT u.id), 0) AS times_played,
+      COALESCE(ROUND(AVG(sub.points), 2), 0) AS avg_points
+  FROM quizzes qz
+  LEFT JOIN questions q 
+      ON q.quiz_id = qz.id
+  LEFT JOIN answers a 
+      ON a.question_id = q.id
+  LEFT JOIN session_answers sa 
+      ON sa.answer_id = a.id
+  LEFT JOIN sessions s 
+      ON s.id = sa.session_id
+  LEFT JOIN users u 
+      ON u.id = s.user_id AND u.role != 'admin'
+  LEFT JOIN (
+      SELECT
+          sa_inner.session_id,
+          q_inner.quiz_id,
+          SUM(sa_inner.points) AS points
+      FROM session_answers sa_inner
+      LEFT JOIN answers a_inner 
+          ON sa_inner.answer_id = a_inner.id
+      LEFT JOIN questions q_inner 
+          ON a_inner.question_id = q_inner.id
+      GROUP BY sa_inner.session_id, q_inner.quiz_id
+  ) sub 
+      ON sub.session_id = s.id AND sub.quiz_id = qz.id
+  GROUP BY qz.id, qz.name
+  ORDER BY qz.name`;
+
+  const { rows: totalPlayersResult, error: totalPlayersError } = await queryDB(
+    `SELECT COUNT(*) FROM public.users AS total_players`
+  );
+  const { rows: totalSessionsResult, error: totalSessionsError } =
+    await queryDB(`SELECT COUNT(*) FROM public.sessions`);
+  const { rows: quizStatsResult, error: quizStatsError } = await queryDB(
+    quizStatsQuery
+  );
+
+  if (totalPlayersError || totalSessionsError || quizStatsError)
+    return res.status(500).json("Failed to fetch overview data");
+
+  res.json({
+    totalPlayers: totalPlayersResult[0].count,
+    totalSessions: totalSessionsResult[0].count,
+    quizStats: quizStatsResult,
+  });
+};
+
+export const getStatAttributes = async (req, res) => {
+  res.json({ attributeData: getAttributes() });
+};

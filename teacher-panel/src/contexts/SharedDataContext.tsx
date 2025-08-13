@@ -13,7 +13,6 @@ interface FilterState {
 
 interface SharedData {
   levelStagesMap: Record<string, string[]>;
-  //groups: { group_name: string }[];
   statAttributes: [];
   filters: FilterState | null;
   setFilters: (filters: FilterState) => void;
@@ -22,7 +21,6 @@ interface SharedData {
 
 const SharedDataContext = createContext<SharedData>({
   levelStagesMap: {},
-  //groups: [],
   statAttributes: [],
   filters: null,
   setFilters: () => {},
@@ -35,7 +33,6 @@ export const SharedDataProvider: React.FC<{ children: React.ReactNode }> = ({
   const [levelStagesMap, setlevelStagesMap] = useState<
     Record<string, string[]>
   >({});
-  //const [groups, setGroups] = useState<{ group_name: string }[]>([]);
   const [statAttributes, setStatAttributes] = useState<[]>([]);
   const [filters, setFilters] = useState<FilterState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,27 +41,19 @@ export const SharedDataProvider: React.FC<{ children: React.ReactNode }> = ({
     const fetchAll = async () => {
       setIsLoading(true);
       try {
-        const [levelStagesRes, /*groupRes,*/ statAttrbutesRes] =
-          await Promise.all([
-            fetch(
-              /*`http://${process.env.NEXT_PUBLIC_SERVER_IP}:${process.env.NEXT_PUBLIC_DB_API_PORT}/api/web/levelStages`*/
-              `http://${process.env.NEXT_PUBLIC_SERVER_IP}:${process.env.NEXT_PUBLIC_DB_API_PORT}/api/ariadni/levelStages`
-            ),
-            /*fetch(
-            `http://${process.env.NEXT_PUBLIC_SERVER_IP}:${process.env.NEXT_PUBLIC_DB_API_PORT}/api/web/groups`
-          ),*/
-            fetch(
-              `http://${process.env.NEXT_PUBLIC_SERVER_IP}:${process.env.NEXT_PUBLIC_DB_API_PORT}/api/web/statsAttributes`
-            ),
-          ]);
+        const [levelStagesRes, statAttrbutesRes] = await Promise.all([
+          fetch(
+            `http://${process.env.NEXT_PUBLIC_SERVER_IP}:${process.env.NEXT_PUBLIC_DB_API_PORT}/api/ariadni/levelStages`
+          ),
+          fetch(
+            `http://${process.env.NEXT_PUBLIC_SERVER_IP}:${process.env.NEXT_PUBLIC_DB_API_PORT}/api/ariadni/statsAttributes`
+          ),
+        ]);
 
-        const [stageData, /*groupData,*/ statAttributeData] = await Promise.all(
-          [
-            levelStagesRes.json(),
-            //groupRes.json(),
-            statAttrbutesRes.json(),
-          ]
-        );
+        const [stageData, statAttributeData] = await Promise.all([
+          levelStagesRes.json(),
+          statAttrbutesRes.json(),
+        ]);
 
         const levelStagesMap: Record<string, string[]> = {};
         console.log(stageData);
@@ -77,7 +66,6 @@ export const SharedDataProvider: React.FC<{ children: React.ReactNode }> = ({
         console.log(statAttributeData.attributeData);
 
         setlevelStagesMap(levelStagesMap);
-        //setGroups(groupData.groupData);
         setStatAttributes(statAttributeData.attributeData);
 
         if (
@@ -137,7 +125,6 @@ export const SharedDataProvider: React.FC<{ children: React.ReactNode }> = ({
     <SharedDataContext.Provider
       value={{
         levelStagesMap,
-        //groups,
         statAttributes,
         filters,
         setFilters,

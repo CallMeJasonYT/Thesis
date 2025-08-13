@@ -36,12 +36,6 @@ const links: NavbarLink[] = [
     tooltip: "Go to the Players Page",
     href: "/Players",
   },
-  {
-    name: "Leaderboard",
-    icon: IconTrophy,
-    tooltip: "Go to the Leaderboard Page",
-    href: "/Leaderboard",
-  },
 ];
 
 const Navbar = (): ReactElement => {
@@ -95,9 +89,6 @@ const Navbar = (): ReactElement => {
             </SimpleTooltip>
           ))}
         </div>
-
-        {/* Notifications Button */}
-        <NotificationSlider />
 
         {/* Burger Menu Button */}
         <div className="block sm:hidden">
