@@ -3,15 +3,7 @@
 import React, { useEffect, useState } from "react";
 import StatsCard from "@/components/StatsCard";
 import { useSharedData } from "@/contexts/SharedDataContext";
-import {
-  IconCheck,
-  IconWifi,
-  IconUser,
-  IconLogin2,
-  IconDeviceGamepad2,
-  IconStopwatch,
-  IconBolt,
-} from "@tabler/icons-react";
+import { IconWifi, IconUser, IconMedal, IconBolt } from "@tabler/icons-react";
 
 const OverviewStatsCards = () => {
   const { levelStagesMap } = useSharedData();
@@ -70,7 +62,7 @@ const OverviewStatsCards = () => {
                 value:
                   stats?.quizStats.find((stat: any) => stat.quiz_name === quiz)
                     ?.times_played ?? "N/A",
-                icon: <IconLogin2 className="text-tertiary" />,
+                icon: <IconBolt className="text-tertiary" />,
               },
               {
                 label: "Average Score",
@@ -78,7 +70,7 @@ const OverviewStatsCards = () => {
                   stats?.quizStats.find((stat: any) => stat.quiz_name === quiz)
                     ?.avg_points ?? "N/A"
                 }`,
-                icon: <IconCheck className="text-primary" />,
+                icon: <IconMedal className="text-primary" />,
               },
             ]}
             colorClass="text-secondary"

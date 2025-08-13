@@ -9,7 +9,7 @@ interface StatsCardProps {
 const StatsCard: React.FC<StatsCardProps> = ({ title, stats, colorClass }) => {
   return (
     <div className="card bg-neutral shadow-lg rounded-2xl p-5 border transition-all hover:shadow-xl">
-      <h2 className={`text-lg font-semibold ${colorClass || "text-primary"}`}>
+      <h2 className={`font-semibold ${colorClass || "text-primary"}`}>
         {title}
       </h2>
       <div className="mt-4 space-y-2 sm:text-sm lg:text-lg text-md">
