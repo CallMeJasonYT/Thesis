@@ -109,32 +109,3 @@ export const saveLevelCompletion = async (req, res) => {
     res.status(500).json({ error: "An error occurred while saving the data." });
   }
 };
-
-export const saveHint = async (req, res) => {
-  const { username, hintText } = req.body;
-  var uuid = "";
-
-  const { rows: uuidRows, error: uuidError } = await queryDB(
-    "SELECT * FROM get_userid_from_username($1)",
-    [username]
-  );
-  if (uuidError) {
-    return res
-      .status(500)
-      .json({ error: "Error getting UUID from the database." });
-  }
-
-  uuid = uuidRows[0].uuid;
-  console.log(uuid);
-
-  const { error: hintError } = await queryDB(
-    "INSERT INTO public.hints (user_id, timestamp, hint_text) VALUES ($1, $2, $3)",
-    [uuid, new Date().toISOString(), hintText]
-  );
-
-  if (hintError) {
-    return res
-      .status(500)
-      .json({ error: "Error storing hint to the database." });
-  }
-};

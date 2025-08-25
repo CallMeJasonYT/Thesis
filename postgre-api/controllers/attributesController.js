@@ -9,7 +9,7 @@ export const getGroups = async (req, res) => {
   );
 
   if (error) return res.status(500).send("Failed to fetch groups");
-  res.json({ playerUUID: rows });
+  res.json({ groups: rows });
 };
 
 export const getLevelStages = async (req, res) => {

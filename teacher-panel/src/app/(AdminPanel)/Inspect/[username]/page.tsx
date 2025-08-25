@@ -15,25 +15,6 @@ const InspectPage = () => {
   const { removeNotification } = useNotification();
   const router = useRouter();
 
-  const saveHint = async () => {
-    try {
-      const res = await fetch(
-        `http://${process.env.NEXT_PUBLIC_SERVER_IP}:${process.env.NEXT_PUBLIC_DB_API_PORT}/api/game/saveHint`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            username: username,
-            hintText: hint,
-          }),
-        }
-      );
-      await res.json();
-    } catch (e) {
-      console.error("Error saving Hints:", e);
-    }
-  };
-
   const handleSendMessage = () => {
     if (!hint.trim()) {
       alert("Hint message cannot be empty!");
@@ -44,7 +25,6 @@ const InspectPage = () => {
         username: username,
         message: hint,
       });
-      saveHint();
     }
     setHint("");
   };

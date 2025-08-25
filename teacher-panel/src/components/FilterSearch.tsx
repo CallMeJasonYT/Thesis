@@ -1,6 +1,5 @@
 "use client";
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { RadioGroup } from "./RadioGroup";
 import { RadioButton } from "./RadioButton";
 import { IconFilter, IconHelp, IconFilterCheck } from "@tabler/icons-react";
@@ -18,6 +17,36 @@ import SimpleTooltip from "./simple-tooltip";
 import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
 import { motion, AnimatePresence } from "framer-motion";
+import React from "react";
+
+const SliderInput = React.memo(
+  ({
+    label,
+    value,
+    onChange,
+  }: {
+    label: string;
+    value: number;
+    onChange: (val: number) => void;
+  }) => {
+    return (
+      <div className="flex flex-col items-start gap-1 w-full">
+        <label className="text-sm">
+          {label}: {value}%
+        </label>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          step={5}
+          value={value}
+          onChange={(e) => onChange(parseInt(e.target.value, 10))}
+          className="w-full accent-primary"
+        />
+      </div>
+    );
+  }
+);
 
 const FilterSearch = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -32,6 +61,7 @@ const FilterSearch = () => {
   }>({});
   const [stageInputs, setStageInputs] = useState<{ [key: string]: number }>({});
 
+  // --- Load filters from context ---
   useEffect(() => {
     if (!isLoading && filters) {
       setSelectedLevel(filters.selectedLevel);
@@ -43,6 +73,7 @@ const FilterSearch = () => {
     }
   }, [isLoading, filters]);
 
+  // --- Reset stageInputs when level changes ---
   useEffect(() => {
     if (selectedLevel && levelStagesMap[selectedLevel]) {
       const newStageInputs: Record<string, number> = {};
@@ -52,6 +83,34 @@ const FilterSearch = () => {
       setStageInputs(newStageInputs);
     }
   }, [selectedLevel, levelStagesMap]);
+
+  const handleAttributeChange = useCallback((stat: string, val: number) => {
+    setAttributeInputs((prev) => ({ ...prev, [stat]: val }));
+  }, []);
+
+  const handleStageChange = useCallback((stage: string, val: number) => {
+    setStageInputs((prev) => ({ ...prev, [stage]: val }));
+  }, []);
+
+  const renderStatSliders = () =>
+    statAttributes.map((stat) => (
+      <SliderInput
+        key={stat}
+        label={stat}
+        value={attributeInputs[stat] ?? 100}
+        onChange={(val) => handleAttributeChange(stat, val)}
+      />
+    ));
+
+  const renderStageSliders = () =>
+    levelStagesMap[selectedLevel]?.map((stage) => (
+      <SliderInput
+        key={stage}
+        label={stage}
+        value={stageInputs[stage] ?? 100}
+        onChange={(val) => handleStageChange(stage, val)}
+      />
+    ));
 
   const handleApplyFiltersButton = () => {
     setFilters({
@@ -64,52 +123,6 @@ const FilterSearch = () => {
     });
     setIsOpen(false);
   };
-
-  const renderStatSliders = () =>
-    statAttributes.map((stat) => (
-      <div key={stat} className="flex flex-col items-start gap-1 w-full">
-        <label className="text-sm">
-          {stat}: {attributeInputs[stat] ?? 100}%
-        </label>
-        <input
-          type="range"
-          min="0"
-          max="100"
-          step="5"
-          value={attributeInputs[stat] ?? 100}
-          onChange={(e) =>
-            setAttributeInputs((prev) => ({
-              ...prev,
-              stat: parseInt(e.target.value, 10),
-            }))
-          }
-          className="w-full accent-primary"
-        />
-      </div>
-    ));
-
-  const renderStageSliders = () =>
-    levelStagesMap[selectedLevel]?.map((stage) => (
-      <div key={stage} className="flex flex-col items-start gap-1 w-full">
-        <label className="text-sm">
-          {stage}: {stageInputs[stage] ?? 100}%
-        </label>
-        <input
-          type="range"
-          min="0"
-          max="100"
-          step="5"
-          value={stageInputs[stage] ?? 100}
-          onChange={(e) =>
-            setStageInputs((prev) => ({
-              ...prev,
-              [stage]: parseInt(e.target.value, 10),
-            }))
-          }
-          className="w-full accent-primary"
-        />
-      </div>
-    ));
 
   return (
     <div className="relative mt-2 mb-2">

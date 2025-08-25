@@ -23,6 +23,8 @@ export const getLeaderboardRecords = async (req, res) => {
     stageInputs,
   } = req.body;
 
+  console.log(req.body);
+
   const startDateISO = new Date(startDate).toISOString();
   const endDateISO = new Date(endDate).toISOString();
 
@@ -42,9 +44,9 @@ export const getLeaderboardRecords = async (req, res) => {
   let stageColumns = "";
   stages.forEach((stage) => {
     stageColumns += `,
-        MAX(CASE WHEN s.stage_id = ${stage.stage_id} THEN sc.stage_elapsed_time END) AS "${stage.stage_name} Total Time",
-        MAX(CASE WHEN s.stage_id = ${stage.stage_id} THEN COALESCE(m.mistake_count, 0) END) AS "${stage.stage_name} Mistakes",
-        MAX(CASE WHEN s.stage_id = ${stage.stage_id} THEN COALESCE(h.hint_count, 0) END) AS "${stage.stage_name} Hints"`;
+    MAX(CASE WHEN s.stage_id = ${stage.stage_id} THEN sc.stage_elapsed_time END) AS "${stage.stage_name} Total Time",
+    MAX(CASE WHEN s.stage_id = ${stage.stage_id} THEN COALESCE(m.mistake_count, 0) END) AS "${stage.stage_name} Mistakes",
+    MAX(CASE WHEN s.stage_id = ${stage.stage_id} THEN COALESCE(h.help_count, 0) END) AS "${stage.stage_name} Helps"`;
   });
 
   const query = `
@@ -54,19 +56,19 @@ export const getLeaderboardRecords = async (req, res) => {
         TO_CHAR(lc.level_timestamp, 'DD/MM/YYYY') AS date,
         SUM(COALESCE(m.mistake_count, 0)) AS "Mistakes",
         lc.total_elapsed_time AS "Total Time",
-        SUM(COALESCE(h.hint_count, 0)) AS "Hints"
+        SUM(COALESCE(h.help_count, 0)) AS "Helps"
         ${stageColumns}
-      FROM public.level_completion lc
-      JOIN public.users u ON lc.user_id = u.uuid
-      JOIN public.levels l ON lc.level_id = l.level_id
-      JOIN public.stage_completion sc ON lc.id = sc.level_completion_id
-      JOIN public.stages s ON sc.stage_id = s.stage_id
-      LEFT JOIN public.mistakes m ON m.level_completion_id = lc.id AND m.stage_id = s.stage_id
-      LEFT JOIN public.hints h ON h.level_completion_id = lc.id AND h.stage_id = s.stage_id
-      WHERE l.level_name = $1
-        AND lc.level_timestamp BETWEEN $2 AND $3
-        AND lc.level_completed = true
-      GROUP BY lc.id, u.username, lc.level_timestamp
+    FROM public.level_completion lc
+    JOIN public.users u ON lc.user_id = u.uuid
+    JOIN public.levels l ON lc.level_id = l.level_id
+    JOIN public.stage_completion sc ON lc.id = sc.level_completion_id
+    JOIN public.stages s ON sc.stage_id = s.stage_id
+    LEFT JOIN public.mistakes m ON m.level_completion_id = lc.id AND m.stage_id = s.stage_id
+    LEFT JOIN public.helps h ON h.level_completion_id = lc.id AND h.stage_id = s.stage_id
+    WHERE l.level_name = $1
+      AND lc.level_timestamp BETWEEN $2 AND $3
+      AND lc.level_completed = true
+    GROUP BY lc.id, u.username, lc.level_timestamp
     `;
 
   const { rows: rawLeaderboardResults, error: leaderboardError } =
@@ -122,7 +124,6 @@ export const getLeaderboardRecords = async (req, res) => {
       (a, b) => parseInt(a[selectedFilter]) - parseInt(b[selectedFilter])
     );
   }
-  console.log(rawLeaderboardResults);
 
   const formattedResults = rawLeaderboardResults.map((row) => {
     const attributes = {};

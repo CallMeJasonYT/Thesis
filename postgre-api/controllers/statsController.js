@@ -80,7 +80,10 @@ function formatResults(queryResult) {
 
   return queryResult.map((row) => {
     const attributesObj = attributes.reduce((acc, attr) => {
-      acc[attr] = parseInt(row[attr]) || 0;
+      const key = Object.keys(row).find(
+        (k) => k.toLowerCase() === attr.toLowerCase().replace(/ /g, "_")
+      );
+      acc[attr] = parseInt(row[key]) || 0;
       return acc;
     }, {});
 

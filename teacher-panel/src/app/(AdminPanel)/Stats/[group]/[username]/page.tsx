@@ -22,7 +22,7 @@ import {
   Legend,
 } from "recharts";
 import { IconSparkles } from "@tabler/icons-react";
-import { PerformanceSummary } from "@/components/performanceSummary";
+import { PerformanceSummary } from "@/components/PerformanceSummary";
 import { motion } from "framer-motion";
 
 interface StatsEntry {

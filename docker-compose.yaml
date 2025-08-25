@@ -2,11 +2,11 @@ services:
   teacher_panel:
     build:
       context: ./teacher-panel
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    environment:
-      - WATCHPACK_POLLING=true
+  dockerfile: Dockerfile
+  ports:
+    - "3000:3000"
+  environment:
+    - WATCHPACK_POLLING=true
 
   websocket-server:
     build:
@@ -32,7 +32,7 @@ services:
     command: yarn start
 
   postgre-db:
-    image: postgres:12-alpine
+    image: postgres:17-alpine
     environment:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: root

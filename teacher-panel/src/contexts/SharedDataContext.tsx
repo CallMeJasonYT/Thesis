@@ -67,11 +67,9 @@ export const SharedDataProvider: React.FC<{ children: React.ReactNode }> = ({
           levelStagesMap[entry.level_name] = entry.stages;
         });
 
-        console.log(statAttributeData);
         console.log(statAttributeData.attributeData);
-
         setlevelStagesMap(levelStagesMap);
-        setGroups(groupData.groupData);
+        setGroups(groupData.groups);
         setStatAttributes(statAttributeData.attributeData);
 
         if (
