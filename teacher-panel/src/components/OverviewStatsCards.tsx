@@ -105,40 +105,43 @@ const OverviewStatsCards = () => {
       </div>
 
       <div className="grid gap-4 md:gap-3 lg:gap-6 sm:grid-cols-3">
-        {levels.map((level: string) => (
-          <StatsCard
-            key={level}
-            title={level}
-            stats={[
-              {
-                label: "Total Players Played",
-                value:
-                  stats?.roomStats.find(
-                    (stat: any) => stat.level_name === level
-                  )?.total_players ?? "N/A",
-                icon: <IconLogin2 className="text-tertiary" />,
-              },
-              {
-                label: "Completion Rate",
-                value: `${
-                  stats?.roomStats.find(
-                    (stat: any) => stat.level_name === level
-                  )?.completion_rate ?? "N/A"
-                }%`,
-                icon: <IconCheck className="text-primary" />,
-              },
-              {
-                label: "Average Completion Time (s)",
-                value:
-                  stats?.roomStats.find(
-                    (stat: any) => stat.level_name === level
-                  )?.avg_time ?? "N/A",
-                icon: <IconStopwatch className="text-secondary" />,
-              },
-            ]}
-            colorClass="text-secondary"
-          />
-        ))}
+        {levels.map(
+          (level: string) =>
+            level != "Lobby" && (
+              <StatsCard
+                key={level}
+                title={level}
+                stats={[
+                  {
+                    label: "Total Players Played",
+                    value:
+                      stats?.roomStats.find(
+                        (stat: any) => stat.level_name === level
+                      )?.total_players ?? "N/A",
+                    icon: <IconLogin2 className="text-tertiary" />,
+                  },
+                  {
+                    label: "Completion Rate",
+                    value: `${
+                      stats?.roomStats.find(
+                        (stat: any) => stat.level_name === level
+                      )?.completion_rate ?? "N/A"
+                    }%`,
+                    icon: <IconCheck className="text-primary" />,
+                  },
+                  {
+                    label: "Average Completion Time (s)",
+                    value:
+                      stats?.roomStats.find(
+                        (stat: any) => stat.level_name === level
+                      )?.avg_time ?? "N/A",
+                    icon: <IconStopwatch className="text-secondary" />,
+                  },
+                ]}
+                colorClass="text-secondary"
+              />
+            )
+        )}
       </div>
     </div>
   );
