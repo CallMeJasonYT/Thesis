@@ -138,7 +138,7 @@ const OverviewStatsCards = () => {
                     icon: <IconStopwatch className="text-secondary" />,
                   },
                 ]}
-                colorClass="text-secondary"
+                colorClass="text-primary"
               />
             )
         )}
