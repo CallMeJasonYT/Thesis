@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useParams } from "next/navigation";
 import { useSharedData } from "@/contexts/SharedDataContext";
 import DatePicker from "react-datepicker";
@@ -19,7 +19,6 @@ import {
   CartesianGrid,
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
-  Legend,
 } from "recharts";
 import { IconSparkles } from "@tabler/icons-react";
 import { PerformanceSummary } from "@/components/performanceSummary";
@@ -30,43 +29,45 @@ interface StatsEntry {
   stage: string;
   date: string;
   username: string;
-  attributes: Record<string, number>;
+  attributes: Record<string, any>;
 }
 
-// Calculate rounded average of grouped values
-const averageGroupedValues = (
-  data: Record<string, any>
-): Record<string, number> => {
-  return Object.entries(data).reduce((acc, [key, values]) => {
-    if (Array.isArray(values) && values.length) {
-      const sum = values.reduce((a, b) => a + b, 0);
-      acc[key] = Math.round((sum / values.length) * 100) / 100;
-    }
-    return acc;
-  }, {} as Record<string, number>);
-};
+const BAR_COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#089887", "#f06c9b"];
 
-// Custom tooltip for Recharts
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="bg-muted p-3 rounded-2xl border border-border shadow-lg">
-      <p className=" font-medium mb-1">{label}</p>
-      {payload.map(({ name, value, color }: any, i: number) => (
-        <p key={i} className="text-sm" style={{ color }}>
-          {name}: {value}
-        </p>
-      ))}
-    </div>
-  );
-};
+const FilterSelect = ({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (value: string) => void;
+}) => (
+  <div className="flex flex-col sm:flex-row items-center gap-2">
+    <label className="font-bold">Select {label}:</label>
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className="bg-neutral border-border rounded-2xl">
+        <SelectValue placeholder={`Select ${label}`} />
+      </SelectTrigger>
+      <SelectContent className="bg-gray-800">
+        {options.map((opt) => (
+          <SelectItem key={opt} value={opt}>
+            {opt}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  </div>
+);
 
 export default function UserStatsPage() {
   const { statAttributes, levelStagesMap } = useSharedData();
   const params = useParams();
-  const user = params.username;
+  const username = params.username;
 
-  // Date range defaults to last 7 days
+  // Dates
   const today = useMemo(() => new Date(), []);
   const defaultStart = useMemo(() => {
     const dt = new Date(today);
@@ -74,35 +75,52 @@ export default function UserStatsPage() {
     return dt;
   }, [today]);
 
+  // State
   const [startDate, setStartDate] = useState<Date>(defaultStart);
   const [endDate, setEndDate] = useState<Date>(today);
-  const [selectedRoom, setSelectedRoom] = useState<string>("Overall");
+  const [selectedRoom, setSelectedRoom] = useState<string>("");
   const [selectedStage, setSelectedStage] = useState<string>("Overall");
   const [selectedStat, setSelectedStat] = useState<string>("Overall");
   const [statsData, setStatsData] = useState<StatsEntry[]>([]);
   const [showSummary, setShowSummary] = useState(false);
   const [innerWidth, setInnerWidth] = useState(0);
+  const hasMounted = useRef(false);
 
   useEffect(() => {
     setInnerWidth(window.innerWidth);
   }, []);
 
-  // Derive keys to display
+  // Derive which stats to show (all if "Overall")
   const statKeys = useMemo(
     () => (selectedStat === "Overall" ? statAttributes : [selectedStat]),
     [selectedStat, statAttributes]
   );
 
   const stageList = useMemo(() => {
-    const allStages =
-      selectedRoom === "Overall"
-        ? Array.from(new Set(Object.values(levelStagesMap).flat()))
-        : levelStagesMap[selectedRoom] || [];
-    return selectedStage === "Overall" ? allStages : [selectedStage];
-  }, [selectedRoom, selectedStage, levelStagesMap]);
+    return selectedRoom
+      ? levelStagesMap[selectedRoom]
+      : Array.from(new Set(Object.values(levelStagesMap).flat()));
+  }, [selectedRoom, levelStagesMap]);
 
-  // Fetch stats on filters change
+  const stageColorMap = useMemo(() => {
+    const stages = selectedStage === "Overall" ? stageList : [selectedStage];
+    return stages.reduce((acc, stage, index) => {
+      acc[stage] = BAR_COLORS[index % BAR_COLORS.length];
+      return acc;
+    }, {} as Record<string, string>);
+  }, [selectedStage, stageList]);
+
+  // Fetch stats
   useEffect(() => {
+    if (!hasMounted.current) {
+      hasMounted.current = true;
+      return;
+    }
+    if (!selectedRoom) {
+      setStatsData([]);
+      return;
+    }
+
     const fetchStats = async () => {
       try {
         const res = await fetch(
@@ -113,7 +131,7 @@ export default function UserStatsPage() {
             body: JSON.stringify({
               startDate: startDate.toISOString(),
               endDate: endDate.toISOString(),
-              username: user,
+              username,
               level: selectedRoom,
               stage: selectedStage,
             }),
@@ -136,54 +154,145 @@ export default function UserStatsPage() {
     };
 
     fetchStats();
-  }, [startDate, endDate, selectedRoom, selectedStage, selectedStat, user]);
+  }, [startDate, endDate, selectedRoom, selectedStage, selectedStat, username]);
 
-  // Transform data for chart
+  // Transform chart data
   const chartData = useMemo(() => {
     const grouped = new Map<string, any>();
-    const levels =
-      selectedRoom === "Overall" ? Object.keys(levelStagesMap) : [selectedRoom];
 
-    statsData.forEach(({ date, room, stage, attributes }) => {
-      if (!levels.includes(room) || !stageList.includes(stage)) return;
-      const key = `${date}-${room}`;
-      if (!grouped.has(key)) grouped.set(key, { date, level: room });
+    const allSubKeys: Record<string, Set<string>> = {};
+    statKeys.forEach((stat) => {
+      allSubKeys[stat] = new Set();
+    });
+
+    statsData.forEach(({ username, stage, date, attributes }) => {
+      const key = date;
+      if (!grouped.has(key)) grouped.set(key, { date, breakdown: {} });
       const entry = grouped.get(key);
+
       statKeys.forEach((stat) => {
-        const label = `${stat} ${stage}`;
-        if (!entry[label]) entry[label] = [];
-        const val = attributes[stat];
-        if (typeof val === "number") entry[label].push(val);
+        const statData = attributes[stat];
+        if (!statData) return;
+
+        if (!entry.breakdown[stat]) entry.breakdown[stat] = {};
+
+        Object.entries(statData).forEach(([subKey, value]) => {
+          const dataKey = `${username}_${stat}_${subKey}`;
+          entry[dataKey] = (entry[dataKey] || 0) + value;
+          entry.breakdown[stat][subKey] =
+            (entry.breakdown[stat][subKey] || 0) + value;
+
+          allSubKeys[stat].add(subKey);
+        });
       });
     });
 
-    return Array.from(grouped.values())
-      .map((d: any) => ({
-        date: d.date,
-        level: d.level,
-        label: `${d.level} (${d.date})`,
-        ...averageGroupedValues(d),
-      }))
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [statsData, selectedRoom, statKeys, stageList, levelStagesMap]);
+    // Fill missing dataKeys with 0
+    grouped.forEach((entry) => {
+      statsData.forEach(({ username }) => {
+        statKeys.forEach((stat) => {
+          allSubKeys[stat].forEach((subKey) => {
+            const dataKey = `${username}_${stat}_${subKey}`;
+            if (!(dataKey in entry)) entry[dataKey] = 0;
+          });
+        });
+      });
+    });
 
-  // Predefined bar colors
-  const barColors = useMemo(
-    () => ["#8884d8", "#82ca9d", "#ffc658", "#089887", "#f06c9b"],
-    []
-  );
+    return Array.from(grouped.values());
+  }, [statsData, statKeys]);
 
-  const renderBars = () =>
-    statKeys.flatMap((stat, si) =>
-      stageList.map((stage, sj) => (
-        <Bar
-          key={`${stat}-${stage}`}
-          dataKey={`${stat} ${stage}`}
-          stackId={selectedStat === "Overall" ? stat : "a"}
-          fill={barColors[(si * stageList.length + sj) % barColors.length]}
-        />
-      ))
+  // Render bars
+  const renderBars = () => {
+    if (!chartData.length) return [];
+
+    const users = Array.from(new Set(statsData.map((d) => d.username))).sort();
+
+    return users.flatMap((username) =>
+      statKeys.flatMap((stat) =>
+        Object.keys(chartData[0]) // Use first entry to get all dataKeys
+          .filter((key) => key.startsWith(`${username}_${stat}_`))
+          .map((dataKey) => {
+            const subKey = dataKey.split("_").slice(2).join("_");
+            return (
+              <Bar
+                key={dataKey}
+                dataKey={dataKey}
+                stackId={`${username}_${stat}`} // stack per stat
+                fill={stageColorMap[subKey] || "#8884d8"}
+                name={`${username} - ${stat} ${subKey}`}
+              />
+            );
+          })
+      )
     );
+  };
+
+  // Custom tooltip
+  const CustomTooltip = ({ active, payload, label, coordinate }: any) => {
+    if (!active || !payload?.length) return null;
+
+    const dataEntry = payload[0].payload;
+    const offsetX = 175;
+
+    return (
+      <div
+        style={{
+          left: coordinate?.x + offsetX,
+          top: coordinate?.y / 3,
+          pointerEvents: "none",
+        }}
+        className="absolute bg-muted p-3 rounded-2xl border border-border shadow-lg min-w-[300px]"
+      >
+        <p className="font-medium mb-2 text-primary">{label}</p>
+
+        {statKeys.map((stat) => {
+          const breakdown = dataEntry.breakdown?.[stat] as
+            | Record<string, number>
+            | undefined;
+          if (!breakdown) return null;
+
+          const total = Object.values(breakdown).reduce((a, b) => a + b, 0);
+
+          return (
+            <div key={stat} className="mb-2">
+              <p className="font-semibold text-sm text-secondary">
+                {stat}: {total}
+              </p>
+              <ul className="list-disc list-inside text-sm">
+                {Object.entries(breakdown).map(([type, value]) => (
+                  <li key={type}>
+                    {stat === "Total Time" ? type : type}: {value}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const filters = [
+    {
+      label: "Level",
+      value: selectedRoom,
+      options: Object.keys(levelStagesMap),
+      onChange: setSelectedRoom,
+    },
+    {
+      label: "Stage",
+      value: selectedStage,
+      options: ["Overall", ...stageList],
+      onChange: setSelectedStage,
+    },
+    {
+      label: "Stat",
+      value: selectedStat,
+      options: ["Overall", ...statAttributes],
+      onChange: setSelectedStat,
+    },
+  ];
 
   return (
     <motion.div
@@ -193,8 +302,8 @@ export default function UserStatsPage() {
       className="container mx-auto p-8 md:py-12"
     >
       <header className="mb-6 md:mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold">Player Statistics</h1>
-        <p className="text-zinc-400 mt-2">Monitor statistics for {user}</p>
+        <h1 className="text-2xl md:text-3xl font-bold">User Statistics</h1>
+        <p className="text-zinc-400 mt-2">Monitor statistics for {username}</p>
       </header>
 
       <div className="p-6 bg-neutral rounded-lg shadow-md">
@@ -205,7 +314,7 @@ export default function UserStatsPage() {
             className="p-0.5 text-sm bg-light text-light-foreground font-semibold border-2 border-border rounded-2xl flex items-center gap-2 md:p-1 hover:border-primary transition cursor-pointer"
           >
             <IconSparkles className="w-5 text-primary" />
-            {innerWidth < 500 ? "Summary" : "Perfomance Summary"}
+            {innerWidth < 500 ? "Summary" : "Performance Summary"}
           </button>
         </div>
 
@@ -219,47 +328,8 @@ export default function UserStatsPage() {
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-4 mb-6">
-          {[
-            {
-              label: "Level",
-              value: selectedRoom,
-              options: ["Overall", ...Object.keys(levelStagesMap)],
-              onChange: setSelectedRoom,
-            },
-            {
-              label: "Stage",
-              value: selectedStage,
-              options: [
-                "Overall",
-                ...Array.from(new Set(Object.values(levelStagesMap).flat())),
-              ],
-              onChange: setSelectedStage,
-            },
-            {
-              label: "Stat",
-              value: selectedStat,
-              options: ["Overall", ...statAttributes],
-              onChange: setSelectedStat,
-            },
-          ].map(({ label, value, options, onChange }) => (
-            <div
-              key={label}
-              className="flex flex-col sm:flex-row items-center gap-2"
-            >
-              <label className="font-bold">Select {label}:</label>
-              <Select value={value} onValueChange={onChange}>
-                <SelectTrigger className="bg-neutral  border-border rounded-2xl">
-                  <SelectValue placeholder={`Select ${label}`} />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-800 ">
-                  {options.map((opt) => (
-                    <SelectItem key={opt} value={opt}>
-                      {opt}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          {filters.map((filter) => (
+            <FilterSelect key={filter.label} {...filter} />
           ))}
         </div>
 
@@ -298,13 +368,12 @@ export default function UserStatsPage() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} barCategoryGap="30%">
                 <CartesianGrid strokeDasharray="3 3" />
-                {innerWidth > 800 ? <XAxis dataKey="label" interval={0} /> : ""}
+                {innerWidth > 800 && <XAxis dataKey="date" interval={0} />}
                 <YAxis width={40} />
                 <RechartsTooltip
                   content={<CustomTooltip />}
                   cursor={{ fill: "transparent" }}
                 />
-                {innerWidth > 500 ? <Legend className="hidden sm:block" /> : ""}
                 {renderBars()}
               </BarChart>
             </ResponsiveContainer>

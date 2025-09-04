@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo, useRef, JSX } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useParams } from "next/navigation";
 import { useSharedData } from "@/contexts/SharedDataContext";
 import DatePicker from "react-datepicker";
@@ -19,7 +19,6 @@ import {
   CartesianGrid,
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
-  Legend,
 } from "recharts";
 import { IconSparkles } from "@tabler/icons-react";
 import { PerformanceSummary } from "@/components/performanceSummary";
@@ -30,11 +29,12 @@ interface StatsEntry {
   stage: string;
   date: string;
   username: string;
-  attributes: Record<string, number>;
+  attributes: Record<string, any>;
 }
 
 const BAR_COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#089887", "#f06c9b"];
 
+// Average array of numbers
 const averageGroupedValues = (
   data: Record<string, any>
 ): Record<string, number> => {
@@ -80,7 +80,6 @@ export default function UserStatsPage() {
   const params = useParams();
   const group = params.group;
 
-  // Initialize dates
   const today = useMemo(() => new Date(), []);
   const defaultStart = useMemo(() => {
     const dt = new Date(today);
@@ -88,7 +87,6 @@ export default function UserStatsPage() {
     return dt;
   }, [today]);
 
-  // State
   const [startDate, setStartDate] = useState<Date>(defaultStart);
   const [endDate, setEndDate] = useState<Date>(today);
   const [selectedRoom, setSelectedRoom] = useState<string>("");
@@ -117,19 +115,16 @@ export default function UserStatsPage() {
     }, {} as Record<string, string>);
   }, [selectedStage, stageList]);
 
-  // Fetch data
+  // Fetch stats
   useEffect(() => {
     if (!hasMounted.current) {
       hasMounted.current = true;
       return;
     }
-
     if (!selectedRoom || !selectedStat) {
       setStatsData([]);
       return;
     }
-
-    console.log("Fetching data with:", { selectedRoom, selectedStat });
 
     const fetchStats = async () => {
       try {
@@ -148,7 +143,7 @@ export default function UserStatsPage() {
           }
         );
         const json = await res.json();
-
+        console.log(json);
         setStatsData(
           json.groupResults.map((e: any) => ({
             room: e.level_name,
@@ -166,122 +161,144 @@ export default function UserStatsPage() {
     fetchStats();
   }, [startDate, endDate, selectedRoom, selectedStage, selectedStat, group]);
 
-  // Transform data for chart
+  // Transform chart data
   const chartData = useMemo(() => {
     const grouped = new Map<string, any>();
+    statsData.forEach(({ username, stage, date, attributes }) => {
+      if (selectedStage !== "Overall" && selectedStage !== stage) return;
 
-    statsData.forEach(({ username, room, stage, date, attributes }) => {
       const key = date;
-      if (!grouped.has(key)) {
-        grouped.set(key, { date });
-      }
-
+      if (!grouped.has(key)) grouped.set(key, { date, breakdown: {} });
       const entry = grouped.get(key);
-      const stagesToShow =
-        selectedStage === "Overall" ? [stage] : [selectedStage];
 
-      statAttributes.forEach((stat) => {
-        if (selectedStat && stat !== selectedStat) return;
+      if (!entry.breakdown[username]) entry.breakdown[username] = {};
 
-        stagesToShow.forEach((currentStage) => {
-          const userStatKey = `${username}_${stat}_${currentStage}`;
-          if (!entry[userStatKey]) entry[userStatKey] = [];
+      statAttributes.forEach((attr) => {
+        if (selectedStat && selectedStat !== attr) return;
 
-          const val = attributes[stat];
-          if (typeof val === "number") entry[userStatKey].push(val);
-        });
+        const val = attributes[attr];
+        let total = 0;
+        let subBreakdown: Record<string, number> = {};
+
+        if (typeof val === "number") {
+          total = val;
+          subBreakdown[attr] = val;
+        } else if (typeof val === "object" && val !== null) {
+          const valTyped = val as Record<string, number>;
+          subBreakdown = { ...valTyped };
+          total = Object.values(valTyped).reduce((a, b) => a + b, 0);
+        }
+
+        const dataKey = `${username}_${attr}_${stage}`;
+        if (!entry[dataKey]) entry[dataKey] = [];
+        entry[dataKey].push(total);
+
+        // Aggregate breakdown across stages for Overall
+        if (!entry.breakdown[username]) entry.breakdown[username] = {};
+        if (!entry.breakdown[username][attr]) {
+          entry.breakdown[username][attr] = { ...subBreakdown };
+        } else {
+          Object.entries(subBreakdown).forEach(([k, v]) => {
+            entry.breakdown[username][attr][k] =
+              (entry.breakdown[username][attr][k] || 0) + v;
+          });
+        }
       });
     });
 
     return Array.from(grouped.values()).map((entry: any) => ({
       date: entry.date,
       ...averageGroupedValues(entry),
+      breakdown: entry.breakdown,
     }));
-  }, [statsData, selectedRoom, statAttributes, selectedStat, selectedStage]);
+  }, [statsData, selectedStage, selectedStat, statAttributes]);
 
-  // Create legend data
-  const legendData = useMemo(() => {
-    const stages = selectedStage === "Overall" ? stageList : [selectedStage];
-    return stages.map((stage) => ({
-      value: stage,
-      type: "square" as const,
-      color: stageColorMap[stage],
-    }));
-  }, [selectedStage, stageList, stageColorMap]);
-
-  // Render bars for chart
+  // Render bars
   const renderBars = () => {
-    if (chartData.length === 0) return [];
-
-    const users = Array.from(
-      new Set(statsData.map(({ username }) => username))
-    ).sort();
-    const filteredStats = selectedStat ? [selectedStat] : statAttributes;
+    if (!chartData.length) return [];
+    const users = Array.from(new Set(statsData.map((d) => d.username))).sort();
     const stagesToShow =
       selectedStage === "Overall" ? stageList : [selectedStage];
 
     return users.flatMap((username) =>
-      filteredStats.flatMap((stat) =>
-        stagesToShow.map((stage) => {
-          const dataKey = `${username}_${stat}_${stage}`;
-          return (
-            <Bar
-              key={dataKey}
-              dataKey={dataKey}
-              stackId={username}
-              fill={stageColorMap[stage]}
-              name={`${username} - ${stat} ${stage}`}
-            />
-          );
-        })
-      )
+      statAttributes
+        .filter((attr) => !selectedStat || selectedStat === attr)
+        .flatMap((attr) =>
+          stagesToShow.map((stage) => {
+            const dataKey = `${username}_${attr}_${stage}`;
+            return (
+              <Bar
+                key={dataKey}
+                dataKey={dataKey}
+                stackId={username}
+                fill={stageColorMap[stage]}
+                name={`${username} - ${attr} ${stage}`}
+              />
+            );
+          })
+        )
     );
   };
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  // Custom tooltip
+  const CustomTooltip = ({ active, payload, label, coordinate }: any) => {
     if (!active || !payload?.length) return null;
 
-    const userStageData: Record<string, Record<string, any[]>> = {};
-
-    payload.forEach((item: any) => {
-      const [username, stat, stage] = item.dataKey.split("_");
-      if (!userStageData[username]) userStageData[username] = {};
-      if (!userStageData[username][stage]) userStageData[username][stage] = [];
-      userStageData[username][stage].push({
-        stat,
-        value: item.value,
-        color: item.color,
-      });
-    });
+    const dataEntry = payload[0].payload;
+    const breakdown = dataEntry.breakdown || {};
+    const offsetX = 175;
+    const users = Array.from(new Set(statsData.map((d) => d.username))).sort();
 
     return (
-      <div className="bg-muted p-3 rounded-2xl border border-border shadow-lg max-w-xl">
-        <p className="font-medium mb-2">{label}</p>
-        <div className="flex gap-2">
-          {Object.entries(userStageData).map(([username, stages]) => (
-            <div key={username} className="flex flex-col">
-              <p className="text-sm font-semibold">{username}</p>
-              <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
-                {Object.entries(stages).flatMap(([stage, items]) =>
-                  items.map(({ stat, value }) => (
-                    <div
-                      key={`${stage}-${stat}`}
-                      className="flex items-center gap-1"
-                    >
-                      <div
-                        className="w-2.5 h-2.5 rounded-sm"
-                        style={{ backgroundColor: stageColorMap[stage] }}
-                      />
-                      <span>
-                        {stage}: {value}
-                      </span>
+      <div
+        style={{
+          left: coordinate?.x + offsetX,
+          top: coordinate?.y / 3,
+          pointerEvents: "none",
+        }}
+        className="absolute bg-muted p-3 rounded-2xl border border-border shadow-lg min-w-[300px]"
+      >
+        <p className="font-medium mb-2 text-primary">{label}</p>
+        {users.map((username) => {
+          const userBreakdown = breakdown[username];
+          if (!userBreakdown) return null;
+
+          return (
+            <div key={username} className="mb-2">
+              <p className="font-semibold text-sm text-secondary">{username}</p>
+              {Object.entries(userBreakdown).map(
+                ([attr, subBreakdown]: [string, any]) => {
+                  const subBreakdownTyped = subBreakdown as Record<
+                    string,
+                    number
+                  >;
+
+                  const total = Object.values(subBreakdownTyped).reduce(
+                    (acc, v) => acc + v,
+                    0
+                  );
+
+                  return (
+                    <div key={attr} className="mb-1 ml-2">
+                      <p className="text-sm font-medium text-secondary">
+                        {attr}: {total}
+                      </p>
+                      <ul className="ml-4 list-disc list-inside text-sm">
+                        {Object.entries(subBreakdownTyped).map(
+                          ([type, value]) => (
+                            <li key={type}>
+                              {type}: {value}
+                            </li>
+                          )
+                        )}
+                      </ul>
                     </div>
-                  ))
-                )}
-              </div>
+                  );
+                }
+              )}
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
     );
   };
@@ -388,10 +405,6 @@ export default function UserStatsPage() {
                 <RechartsTooltip
                   content={<CustomTooltip />}
                   cursor={{ fill: "transparent" }}
-                />
-                <Legend
-                  payload={legendData}
-                  wrapperStyle={{ paddingTop: "20px" }}
                 />
                 {renderBars()}
               </BarChart>

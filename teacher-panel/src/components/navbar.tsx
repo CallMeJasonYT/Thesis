@@ -54,7 +54,7 @@ const Navbar = (): ReactElement => {
   return (
     <>
       <motion.nav
-        className="px-4 py-4 flex justify-between items-center border-b border-muted"
+        className="px-4 py-4 flex justify-between items-center border-b border-secondary"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6 }}

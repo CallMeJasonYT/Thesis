@@ -26,7 +26,9 @@ export const getLeaderboardRecords = async (req, res) => {
   console.log(req.body);
 
   const startDateISO = new Date(startDate).toISOString();
-  const endDateISO = new Date(endDate).toISOString();
+  const endDateISO = new Date(
+    new Date(endDate).getTime() + 24 * 60 * 60 * 1000
+  ).toISOString();
 
   let stages = [];
   if (selectedFilter === "advanced") {

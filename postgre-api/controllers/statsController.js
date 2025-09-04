@@ -42,7 +42,9 @@ export const getGroupStats = async (req, res) => {
 
   const { startDate, endDate, group, level, stage } = req.body;
   const startDateISO = new Date(startDate).toISOString();
-  const endDateISO = new Date(endDate).toISOString();
+  const endDateISO = new Date(
+    new Date(endDate).getTime() + 24 * 60 * 60 * 1000
+  ).toISOString();
 
   const { rows, error } = await queryDB(
     `SELECT * FROM get_group_stats_by_filters($1, $2, $3, $4, $5)`,
@@ -52,7 +54,7 @@ export const getGroupStats = async (req, res) => {
     return res
       .status(500)
       .json("Error fetching group stats from the database.");
-  res.status(200).json({ groupResults: formatResults(rows) });
+  res.status(200).json({ groupResults: rows });
 };
 
 export const getUserStats = async (req, res) => {
@@ -64,7 +66,9 @@ export const getUserStats = async (req, res) => {
 
   const { startDate, endDate, username, level, stage } = req.body;
   const startDateISO = new Date(startDate).toISOString();
-  const endDateISO = new Date(endDate).toISOString();
+  const endDateISO = new Date(
+    new Date(endDate).getTime() + 24 * 60 * 60 * 1000
+  ).toISOString();
 
   const { rows, error } = await queryDB(
     `SELECT * FROM get_user_stats_by_filters($1, $2, $3, $4, $5)`,
@@ -72,27 +76,5 @@ export const getUserStats = async (req, res) => {
   );
   if (error)
     return res.status(500).json("Error fetching user stats from the database.");
-  res.status(200).json({ userResults: formatResults(rows) });
+  res.status(200).json({ userResults: rows });
 };
-
-function formatResults(queryResult) {
-  const attributes = getAttributes();
-
-  return queryResult.map((row) => {
-    const attributesObj = attributes.reduce((acc, attr) => {
-      const key = Object.keys(row).find(
-        (k) => k.toLowerCase() === attr.toLowerCase().replace(/ /g, "_")
-      );
-      acc[attr] = parseInt(row[key]) || 0;
-      return acc;
-    }, {});
-
-    return {
-      date: row.date,
-      username: row.username,
-      level_name: row.level_name,
-      stage_name: row.stage_name,
-      attributes: attributesObj,
-    };
-  });
-}

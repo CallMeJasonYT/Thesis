@@ -1,7 +1,6 @@
 import express, { json } from "express";
 import cors from "cors";
 import {
-  gameDataRoutes,
   leaderboardRoutes,
   attributesRoutes,
   statsRoutes,
@@ -18,7 +17,6 @@ await loadAttributes();
 
 app.use(cors());
 app.use(json());
-app.use(gameDataRoutes);
 app.use(leaderboardRoutes);
 app.use(attributesRoutes);
 app.use(statsRoutes);

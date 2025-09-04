@@ -11,7 +11,7 @@ interface PerformanceEntry {
   stage: string;
   date: string;
   username: string;
-  attributes: Record<string, number>;
+  attributes: Record<string, Record<string, number> | number>; // nested categories
 }
 
 interface PerformanceSummaryProps {
@@ -20,20 +20,19 @@ interface PerformanceSummaryProps {
   onClose: () => void;
 }
 
-// Define thresholds for rooms (optional and flexible)
+// Example thresholds (expand as needed)
 const thresholds: Record<string, Record<string, Record<string, number>>> = {
-  Tutorial: {
-    "Stage 1": { Mistakes: 4, "Total Time": 30 },
-    "Stage 2": { Mistakes: 5, "Total Time": 30 },
-    "Stage 3": { Mistakes: 1, "Total Time": 20 },
-    "Stage 4": { Mistakes: 5, "Total Time": 60 },
+  EscapeRoom: {
+    "Stage 1": { Mistakes: 2, Helps: 1, "Total Time": 90 },
+    "Stage 2": { Mistakes: 3, "Total Time": 120 },
+    "Stage 3": { Mistakes: 3, "Total Time": 120 },
   },
 };
 
 function generatePrompt(data: PerformanceEntry[], type: string): string {
   const grouped: Record<
     string,
-    Record<string, Record<string, Record<string, number>>>
+    Record<string, Record<string, Record<string, any>>>
   > = {};
 
   data.forEach((entry) => {
@@ -44,12 +43,27 @@ function generatePrompt(data: PerformanceEntry[], type: string): string {
 
   const lines: string[] = [];
 
+  // --- Context / Instruction improvements ---
   lines.push(
-    `You are an AI tool that summarizes students performances in a ` +
-      type +
-      ` level in an educational game that uses sorting alogirthms to solve puzzles.`
+    `You are an AI tutor assistant that analyzes and summarizes student performances in an educational puzzle game. The puzzles are based on sorting algorithms and problem-solving tasks.`
+  );
+  lines.push(
+    `Your task is to generate a well-structured summary for a ${type}-level report that will be read by a teacher.`
+  );
+  lines.push(
+    `Be concise, clear, and professional. Use short paragraphs separated by line breaks so the text is easy to read.`
+  );
+  lines.push(
+    `In your analysis, highlight whether the student(s) performed well, struggled, or exceeded thresholds.`
+  );
+  lines.push(
+    `Identify where they made progress, where they regressed, and give constructive advice for the next steps.`
+  );
+  lines.push(
+    `Do not use markdown symbols like **bold** or bullet points; just use plain sentences with line breaks.`
   );
 
+  // --- Data Section ---
   data.forEach((entry) => {
     lines.push(`\n========================`);
     lines.push(`Student Information`);
@@ -65,17 +79,35 @@ function generatePrompt(data: PerformanceEntry[], type: string): string {
       for (const [room, stages] of Object.entries(rooms)) {
         lines.push(`  Room: ${room}`);
         for (const [stage, attrs] of Object.entries(stages)) {
-          const attrStrings = Object.entries(attrs).map(
-            ([key, value]) =>
-              `    - ${key}: ${value}${key.includes("Time") ? "s" : ""}`
-          );
           lines.push(`    Stage: ${stage}`);
-          lines.push(...attrStrings);
+
+          // Flatten nested attributes
+          for (const [category, categoryValues] of Object.entries(attrs)) {
+            if (typeof categoryValues === "object") {
+              lines.push(`      ${category}:`);
+              for (const [subKey, subValue] of Object.entries(
+                categoryValues as Record<string, number>
+              )) {
+                lines.push(
+                  `        - ${subKey}: ${subValue}${
+                    subKey.includes("Time") ? "s" : ""
+                  }`
+                );
+              }
+            } else {
+              lines.push(
+                `      - ${category}: ${categoryValues}${
+                  category.includes("Time") ? "s" : ""
+                }`
+              );
+            }
+          }
         }
       }
     }
   });
 
+  // --- Threshold Section ---
   lines.push(`\n========================`);
   lines.push(`Acceptable Thresholds`);
   lines.push(`========================`);
@@ -87,28 +119,26 @@ function generatePrompt(data: PerformanceEntry[], type: string): string {
       lines.push(`Room: ${room}`);
       for (const [stage, attrs] of Object.entries(stages)) {
         lines.push(`  Stage: ${stage}`);
-        const parts = Object.entries(attrs).map(
-          ([k, v]) => `    - ${k}: ${v}${k.includes("Time") ? "s" : ""}`
-        );
-        lines.push(...parts);
+        for (const [k, v] of Object.entries(attrs)) {
+          lines.push(`    - ${k}: ${v}${k.includes("Time") ? "s" : ""}`);
+        }
       }
     }
 
     if (!thresholds["Training"]) {
       lines.push(`Room: Training`);
       lines.push(
-        `  - No thresholds since it's training, so just give basic feedback.`
+        `  - No thresholds since it's training, so provide general encouragement and feedback only.`
       );
     }
   }
 
+  // --- Final explicit instructions ---
   lines.push(`\n========================`);
-  lines.push(`Instructions`);
+  lines.push(`Final Instructions`);
   lines.push(`========================`);
   lines.push(
-    `Generate a paragraph that has line-breaks in order to look good. I don't want you to use ** for emphasis. Summarize the performance of the ` +
-      type +
-      ` for the teacher. Indicate if they performed well, struggled, or exceeded thresholds. Mention where they made progress or regressed. Also make sure to give some advice for the next steps for the student.`
+    `Write a clear, teacher-friendly summary of this performance. Mention strong areas, weak areas, and advice for improvement. The response should be 1–3 short paragraphs, written in plain text with line breaks.`
   );
 
   return lines.join("\n");
