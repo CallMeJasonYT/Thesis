@@ -101,42 +101,23 @@ function handleMessage(ws, data) {
   }
 }
 
-// Function to enhance notification with Gemini
-let previousMessages = [];
-
 async function enhanceNotificationWithGemini(data) {
   try {
-    const randomSeed = Math.floor(Math.random() * 1000);
-    const themes = [
-      "pirate",
-      "space",
-      "detective",
-      "cooking",
-      "adventure",
-      "sci-fi",
-      "mystery",
-    ];
-    const randomTheme = themes[Math.floor(Math.random() * themes.length)];
-
     const prompt = `
-      You are a game assistant creating unique notifications for a teacher.
-      Avoid repeating any previous message styles or phrases. Here are recent messages:
-      ${previousMessages.slice(-5).join("\n")}
+      You are an engaging game assistant creating unique notifications for a teacher for players who are taking too long in a stage indicating that they need extra help.
+      The game is about sorting algorithms learning, which uses an escape room and the students need get out of the room as fast as possible solving the algorithmic puzzles correctly.
+      Avoid repeating any previous message styles or phrases.
 
       Player: ${data.username}
       Game Level: ${data.room}
       Current Stage: ${data.stage}
       Time Spent: ${data.time} seconds
-      Random Seed: ${randomSeed}
-      Theme: ${randomTheme}
 
       Requirements:
-      - Write a short (max 2 sentences) notification.
-      - Vary tone: playful, sarcastic, dramatic, motivational, or mysterious.
-      - Use different emojis 🤖 🕵️ 🐢 🎮 🎉 🎯 🌌 but not always the same ones.
-      - Make sure this message feels different in style and energy from the ones above.
-      - Do NOT use quotation marks.
-      - Reply only with the message text.
+      - Every Message has to be different than the previous one
+      - Do NOT include any quotation marks in your response
+      - Focus more on the information that the teacher will find important
+      - Don't mention anything about seeds and irrelevant information
       `;
 
     const response = await axios.post(
@@ -144,10 +125,10 @@ async function enhanceNotificationWithGemini(data) {
       {
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
-          temperature: 1.4,
+          temperature: 0.75,
           maxOutputTokens: 300,
           topP: 0.95,
-          topK: 80,
+          topK: 40,
           frequencyPenalty: 1.1,
         },
       },
@@ -156,7 +137,7 @@ async function enhanceNotificationWithGemini(data) {
 
     let generatedMessage =
       response.data.candidates[0].content.parts[0].text.trim();
-    previousMessages.push(generatedMessage); // Save for future comparison
+    console.log("Generated Message:", generatedMessage);
 
     return { ...data, enhancedMessage: generatedMessage };
   } catch (error) {
